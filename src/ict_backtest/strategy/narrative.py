@@ -62,8 +62,17 @@ def _structure_states(htf: Candles, swing_k: int) -> np.ndarray:
 
 
 def _dol_states(htf: Candles, swing_k: int, eq_tol_atr: float,
-                min_gap_atr: float, atr_period: int) -> np.ndarray:
-    """Draw-on-liquidity imbalance per daily bar, in [-1, +1]."""
+                min_gap_atr: float, atr_period: int,
+                lookback: int = 60) -> np.ndarray:
+    """Draw-on-liquidity imbalance per daily bar, in [-1, +1].
+
+    Only artifacts *formed within the last ``lookback`` daily bars* count.
+    Without this recency window the factor degenerates in trends: the side
+    price is running away from accumulates never-revisited pools forever
+    (Iteration-01 finding: 98.8% bearish through a bull market), which is
+    stale inventory, not draw.  ICT's IPDA framing likewise references only
+    the recent 20/40/60-day ranges.
+    """
     pools = detect_liquidity_pools(htf, detect_swings(htf, swing_k), eq_tol_atr, atr_period)
     fvgs = detect_fvgs(htf, min_gap_atr, atr_period)
     close = htf.close
@@ -75,6 +84,8 @@ def _dol_states(htf: Candles, swing_k: int, eq_tol_atr: float,
         for p in pools:
             if p.confirm_index > k or (p.taken_index != -1 and p.taken_index <= k):
                 continue
+            if max(p.swing_indices) < k - lookback:
+                continue  # stale liquidity, not a live draw
             if p.side == BULL and p.level > c:
                 score += 1.0
                 count += 1
@@ -83,6 +94,8 @@ def _dol_states(htf: Candles, swing_k: int, eq_tol_atr: float,
                 count += 1
         for g in fvgs:
             if g.confirm_index > k or (g.fill_index != -1 and g.fill_index <= k):
+                continue
+            if g.index < k - lookback:
                 continue
             mid = 0.5 * (g.low + g.high)
             if mid > c:
@@ -150,6 +163,7 @@ class NarrativeEngine:
         atr_period: int = 14,
         ipda_windows: tuple[int, ...] = (20, 40, 60),
         ipda_hold_days: int = 10,
+        dol_lookback_days: int = 60,
         weights: tuple[float, ...] = (1.0, 1.0, 1.0, 1.0, 1.0),
         min_conviction: float = 0.5,
     ) -> None:
@@ -165,7 +179,8 @@ class NarrativeEngine:
             "struct_htf": _broadcast(n, htf_last, _structure_states(htf, swing_k)),
             "struct_wk": _broadcast(n, wk_last, _structure_states(wk, swing_k)),
             "dol": _broadcast(n, htf_last, _dol_states(htf, swing_k, eq_tol_atr,
-                                                       min_gap_atr, atr_period)),
+                                                       min_gap_atr, atr_period,
+                                                       dol_lookback_days)),
             "ipda": _broadcast(n, htf_last, _ipda_states(htf, ipda_windows, ipda_hold_days)),
         }
         w = np.asarray(weights, dtype=float)

@@ -80,6 +80,7 @@ class SMCStrategy:
                 eq_tol_atr=cfg.eq_tol_atr, min_gap_atr=cfg.min_gap_atr,
                 atr_period=cfg.atr_period, ipda_windows=cfg.ipda_windows,
                 ipda_hold_days=cfg.ipda_hold_days,
+                dol_lookback_days=cfg.dol_lookback_days,
                 weights=cfg.narrative_weights,
                 min_conviction=cfg.narrative_min_conviction,
             )
@@ -121,6 +122,24 @@ class SMCStrategy:
         self._pending_order_id: int | None = None
         self._pending_poi_death: int = -1
         self._await: dict | None = None   # confirmation-mode staged setup
+
+        # setup funnel: where candidate signals die, for over-gating diagnosis
+        self.funnel = {
+            "signals": 0,             # sweep-armed structure breaks considered
+            "rejected_bias": 0,
+            "rejected_bias2": 0,
+            "rejected_discount": 0,
+            "rejected_draw": 0,
+            "rejected_time": 0,       # killzone or news blackout
+            "staged_attempts": 0,
+            "rejected_no_poi": 0,
+            "rejected_ote": 0,
+            "rejected_geometry": 0,   # stop/risk/qty sanity failures
+            "placed_limit": 0,
+            "placed_await": 0,
+            "await_triggered": 0,
+            "await_abandoned": 0,     # expiry, POI death, or stop violation
+        }
 
     # ------------------------------------------------------------------
 
@@ -218,7 +237,9 @@ class SMCStrategy:
 
         # 2. manage an open position (breakeven trail), nothing else while in it
         if broker.position is not None:
-            self._await = None
+            if self._await is not None:
+                self.funnel["await_abandoned"] += 1
+                self._await = None
             self._manage(i, broker)
             return
 
@@ -233,25 +254,29 @@ class SMCStrategy:
             matches = [a for a in self._armed if a.direction == ev.direction]
             if not matches:
                 continue
+            self.funnel["signals"] += 1
             # bias-dominance gates: the HTF judgment layer must fully agree
             # before any trigger is even considered
             if cfg.use_htf_bias and self.bias[i] != ev.direction:
+                self.funnel["rejected_bias"] += 1
                 continue
             if self.bias2 is not None and self.bias2[i] != ev.direction:
+                self.funnel["rejected_bias2"] += 1
                 continue
             if cfg.require_htf_discount:
                 eq = self.htf_eq[i]
                 c = float(self.candles.close[i])
-                if np.isnan(eq):
-                    continue
-                if ev.direction == BULL and c >= eq:
-                    continue
-                if ev.direction == BEAR and c <= eq:
+                if np.isnan(eq) or (ev.direction == BULL and c >= eq) \
+                        or (ev.direction == BEAR and c <= eq):
+                    self.funnel["rejected_discount"] += 1
                     continue
             if cfg.require_draw and not self._draw_exists(ev.direction, i):
+                self.funnel["rejected_draw"] += 1
                 continue
             if not self.kz_mask[i] or self.news_mask[i]:
+                self.funnel["rejected_time"] += 1
                 continue
+            self.funnel["staged_attempts"] += 1
             sweep = max(matches, key=lambda a: a.bar)
             self._stage_entry(i, ev.direction, sweep, broker)
             self._armed = [a for a in self._armed if a.direction != ev.direction]
@@ -280,6 +305,7 @@ class SMCStrategy:
         a = self._await
         assert a is not None
         if i > a["expiry"] or (a["death"] != -1 and i >= a["death"]):
+            self.funnel["await_abandoned"] += 1
             self._await = None
             return
         c = float(self.candles.close[i])
@@ -293,6 +319,7 @@ class SMCStrategy:
             touched = float(self.candles.high[i]) >= a["trigger"]
             confirmed = c < a["trigger"]
         if violated:
+            self.funnel["await_abandoned"] += 1
             self._await = None
             return
         if not (touched and confirmed) or self.news_mask[i]:
@@ -301,6 +328,7 @@ class SMCStrategy:
         stop = a["stop"]
         risk = (c - stop) if direction == BULL else (stop - c)
         if risk <= 0:
+            self.funnel["await_abandoned"] += 1
             self._await = None
             return
         target = self._liquidity_target(direction, i, c, risk)
@@ -308,11 +336,13 @@ class SMCStrategy:
         qty = (equity * self.cfg.risk_pct / 100.0) / risk
         qty = min(qty, equity * self.cfg.max_leverage / c)
         if qty <= 0:
+            self.funnel["await_abandoned"] += 1
             self._await = None
             return
         broker.submit(Order(side=direction, qty=qty, type="market",
                             sl=stop, tp=target,
                             tag=f"smc_confirm_{'long' if direction == BULL else 'short'}"))
+        self.funnel["await_triggered"] += 1
         self._await = None
 
     # ------------------------------------------------------------------
@@ -364,10 +394,12 @@ class SMCStrategy:
         hi = float(np.max(self.candles.high[sweep.bar : m + 1]))
         leg = hi - lo
         if leg <= 0:
+            self.funnel["rejected_geometry"] += 1
             return
 
         poi = self._find_poi(direction, sweep.bar, m)
         if poi is None:
+            self.funnel["rejected_no_poi"] += 1
             return
         poi_lo, poi_hi, poi_death = poi
 
@@ -378,11 +410,14 @@ class SMCStrategy:
             if cfg.require_ote:
                 entry = min(entry, band_hi)
                 if entry < band_lo or poi_lo > band_hi:
+                    self.funnel["rejected_ote"] += 1
                     return
             if cfg.require_discount and entry > lo + 0.5 * leg:
+                self.funnel["rejected_ote"] += 1
                 return
             stop = sweep.wick - cfg.stop_buffer_atr * self.atr[m]
             if entry <= stop:
+                self.funnel["rejected_geometry"] += 1
                 return
             risk = entry - stop
             target = self._liquidity_target(direction, m, entry, risk)
@@ -393,11 +428,14 @@ class SMCStrategy:
             if cfg.require_ote:
                 entry = max(entry, band_lo)
                 if entry > band_hi or poi_hi < band_lo:
+                    self.funnel["rejected_ote"] += 1
                     return
             if cfg.require_discount and entry < hi - 0.5 * leg:
+                self.funnel["rejected_ote"] += 1
                 return
             stop = sweep.wick + cfg.stop_buffer_atr * self.atr[m]
             if entry >= stop:
+                self.funnel["rejected_geometry"] += 1
                 return
             risk = stop - entry
             target = self._liquidity_target(direction, m, entry, risk)
@@ -406,6 +444,7 @@ class SMCStrategy:
         qty = (equity * cfg.risk_pct / 100.0) / risk
         qty = min(qty, equity * cfg.max_leverage / entry)
         if qty <= 0:
+            self.funnel["rejected_geometry"] += 1
             return
 
         if cfg.entry_confirmation:
@@ -419,6 +458,7 @@ class SMCStrategy:
                 "expiry": m + cfg.order_expiry_bars,
                 "death": poi_death,
             }
+            self.funnel["placed_await"] += 1
             return
 
         if self._pending_order_id is not None:
@@ -429,6 +469,7 @@ class SMCStrategy:
                   tag=f"smc_{'long' if direction == BULL else 'short'}")
         )
         self._pending_poi_death = poi_death
+        self.funnel["placed_limit"] += 1
 
     def _liquidity_target(self, direction: int, m: int, entry: float, risk: float) -> float:
         """Nearest live opposing liquidity pool offering >= min_rr, else fixed R."""

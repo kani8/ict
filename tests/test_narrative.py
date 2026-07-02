@@ -83,6 +83,20 @@ def test_dol_states_signs():
     assert np.any(states != 0.0)
 
 
+def test_dol_recency_window_excludes_stale_liquidity():
+    # a lone swing low early on, then a long steady rally away from it:
+    # with a short lookback the stale sell-side pool must stop counting
+    prices = [100, 99, 95, 99, 100] + [100 + 0.2 * i for i in range(120)]
+    daily = _daily(prices)
+    short = _dol_states(daily, swing_k=2, eq_tol_atr=0.0,
+                        min_gap_atr=10.0, atr_period=14, lookback=30)
+    long_ = _dol_states(daily, swing_k=2, eq_tol_atr=0.0,
+                        min_gap_atr=10.0, atr_period=14, lookback=10_000)
+    assert long_[-1] < 0.0     # stale pool below still drags the unbounded score
+    assert short[-1] >= long_[-1]
+    assert short[-1] == 0.0    # nothing recent below, nothing above -> abstain
+
+
 def test_engine_score_and_conviction():
     candles = synthetic_candles(n=20_000, seed=11, base_vol=0.004)
     eng = NarrativeEngine(candles, mtf_multiplier=8, htf_multiplier=32,
@@ -114,6 +128,44 @@ def test_strategy_narrative_mode_gates_trades():
     for t in result.trades:
         lo = max(0, t.entry_index - window)
         assert (strat.bias[lo : t.entry_index + 1] == t.side).any()
+
+
+def test_funnel_accounting():
+    candles = synthetic_candles(n=20_000, seed=21, base_vol=0.005)
+    cfg = SMCConfig(use_killzones=False, require_ote=False, require_discount=False,
+                    htf_multiplier=8, min_rr=1.0)
+    strat = SMCStrategy(candles, cfg)
+    bt = Backtester(cost=CostModel(), initial_equity=100_000)
+    result = bt.run(candles, strat)
+    f = strat.funnel
+    rejections = (f["rejected_bias"] + f["rejected_bias2"] + f["rejected_discount"]
+                  + f["rejected_draw"] + f["rejected_time"])
+    assert f["signals"] == rejections + f["staged_attempts"]
+    assert f["staged_attempts"] == (f["rejected_no_poi"] + f["rejected_ote"]
+                                    + f["rejected_geometry"] + f["placed_limit"]
+                                    + f["placed_await"])
+    assert f["signals"] > 0 and f["placed_limit"] > 0
+    assert f["placed_limit"] >= len(result.trades)  # some orders expire unfilled
+
+
+def test_underpowered_result_is_labeled():
+    from ict_backtest.analytics import compute_metrics, matched_baseline_test, render_report
+    from ict_backtest.engine import BacktestResult
+
+    candles = synthetic_candles(n=8000, seed=13, base_vol=0.004)
+    cfg = SMCConfig(use_killzones=False, require_ote=False, require_discount=False,
+                    htf_multiplier=8, min_rr=1.0)
+    bt = Backtester(cost=CostModel(), initial_equity=100_000)
+    full = bt.run(candles, SMCStrategy(candles, cfg))
+    assert len(full.trades) >= 3
+    small = BacktestResult(trades=full.trades[:2], equity_curve=full.equity_curve,
+                           candles=candles, initial_equity=full.initial_equity)
+    baseline = matched_baseline_test(candles, small, bt, n_sims=50)
+    assert baseline.n_sims == 0
+    assert "underpowered" in baseline.note
+    report = render_report(small, compute_metrics(small), baseline)
+    assert "underpowered, not evidence" in report
+    assert "null test skipped" in report
 
 
 def test_bias_mode_validation():

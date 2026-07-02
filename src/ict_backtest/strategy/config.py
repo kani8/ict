@@ -28,6 +28,8 @@ class SMCConfig:
     ipda_windows: tuple[int, ...] = (20, 40, 60)  # ICT's IPDA data ranges — his
                                    # stated stand-in for weekly/monthly context
     ipda_hold_days: int = 10       # how long a range event colors the narrative
+    dol_lookback_days: int = 60    # dol counts only liquidity formed within
+                                   # this window (stale pools are not a draw)
     # bias-dominance gates: HTF judgment as the majority contributor, with the
     # sweep/MSS/POI mechanics acting only as triggers (all default-off)
     bias_htf2_multiplier: int = 0  # second, higher bias TF that must also agree

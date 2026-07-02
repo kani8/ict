@@ -47,6 +47,14 @@ def render_report(
     ]
 
     rs = np.array([t.r_multiple for t in result.trades if not math.isnan(t.r_multiple)])
+    if 0 < len(rs) < 5:
+        lines += [
+            "",
+            "## Statistical validity",
+            "",
+            f"- Only {len(rs)} trade(s) — too few for confidence intervals or null "
+            "tests. This result is **underpowered, not evidence** in either direction.",
+        ]
     if len(rs) >= 5:
         mean, lo, hi, blen = block_bootstrap_ci(rs)
         verdict = "edge inconsistent with zero" if lo > 0 else "**cannot reject zero edge**" if hi > 0 else "negative edge"
@@ -57,6 +65,8 @@ def render_report(
             f"- Mean trade R: **{_fmt(mean)}**, 95% block-bootstrap CI **[{_fmt(lo)}, {_fmt(hi)}]** "
             f"(block length {blen}, preserves trade clustering) — {verdict}.",
         ]
+    if baseline is not None and baseline.n_sims == 0 and baseline.note:
+        lines += [f"- Null test: {baseline.note}."]
     if baseline is not None and baseline.n_sims > 0:
         sig = "significant at 5%" if baseline.significant_5pct else "**not significant at 5%**"
         if baseline.kind == "matched":

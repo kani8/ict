@@ -95,6 +95,7 @@ class BaselineTest:
     diagnostics: dict = field(default_factory=dict)
     p_value_mean_r: float = float("nan")  # P(null mean trade R >= strategy's);
                                           # risk-normalized, exposure-robust
+    note: str = ""          # e.g. why the test was skipped
 
     @property
     def significant_5pct(self) -> bool:
@@ -132,7 +133,12 @@ def matched_baseline_test(
     """
     trades = result.trades
     if not trades:
-        return BaselineTest(0.0, 0.0, 0.0, 1.0, 0, kind="matched")
+        return BaselineTest(0.0, 0.0, 0.0, 1.0, 0, kind="matched",
+                            note="no trades — null test skipped")
+    if len(trades) < 5:
+        return BaselineTest(result.total_return, 0.0, 0.0, 1.0, 0, kind="matched",
+                            note=f"only {len(trades)} trades — null test skipped "
+                                 "(needs >= 5); result is underpowered, not evidence")
 
     def _mean_r(ts) -> float:
         rs = [t.r_multiple for t in ts if not np.isnan(t.r_multiple)]

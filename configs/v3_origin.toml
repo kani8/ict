@@ -21,6 +21,7 @@ narrative_weights = [1.0, 1.0, 1.0, 1.0, 1.0]  # struct_4h, struct_daily, struct
 narrative_min_conviction = 0.5
 ipda_windows = [20, 40, 60]
 ipda_hold_days = 10
+dol_lookback_days = 60   # Iteration-01 fix: stale liquidity is not a draw
 
 # bias-dominance gates (kept from V2.1)
 use_htf_bias = true

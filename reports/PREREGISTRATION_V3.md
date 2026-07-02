@@ -38,6 +38,27 @@ tradingstrategyguides.com trade-plan notes).
 - Pre-2023 FOMC dates must be added via `news_csv` from the Fed's
   published calendar before any holdout price data is inspected.
 
+## Amendment: index-futures track (2026-07-02, before any index data contact)
+
+Per user directive to investigate ICT's home market:
+
+- **ES (S&P 500 futures) 2023-01-01 → 2026-07-01, 15m+1m = development
+  data** for the index track — deliberately burned once sourced.
+- **NQ (Nasdaq-100 futures) 2023-2026 = reserved index holdout** —
+  never fetched, inspected, or summarized until an index-track freeze.
+- Prerequisites for any ES run: continuous back-adjusted contract with
+  roll method recorded; session-correct `--bars-per-year`; recalibrated
+  costs; full high-impact calendar (incl. CPI) per
+  `docs/CALENDAR_SOURCES.md`, committed before price contact.
+- The crypto holdouts and decision rule below are unaffected.
+
+## Development-phase changes log
+
+- Iteration 01 → 02: `dol_lookback_days = 60` (defect fix: stale
+  liquidity no longer counts as draw); setup-funnel instrumentation;
+  null test skipped and labeled when n < 5. Declared before any holdout
+  contact; crypto dev sets only.
+
 ## Decision rule (unchanged machinery)
 
 Frozen config: [`configs/v3_origin.toml`](../configs/v3_origin.toml) as
