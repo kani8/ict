@@ -126,6 +126,20 @@ def test_news_csv_loader(tmp_path):
     assert events[0] == int(pd.Timestamp("2024-08-02 12:30", tz="UTC").timestamp())
 
 
+def test_news_csv_impact_filter(tmp_path):
+    p = tmp_path / "cal.csv"
+    p.write_text(
+        "datetime,impact,event\n"
+        "2024-08-02T12:30:00Z,High,NFP\n"
+        "2024-08-05T14:00:00Z,medium,speech\n"
+        "2024-08-14T12:30:00Z,HIGH,CPI\n"
+    )
+    assert len(load_news_csv(p)) == 3                            # no filter: all
+    events = load_news_csv(p, impact_filter=("high",))           # case-insensitive
+    assert len(events) == 2
+    assert events[1] == int(pd.Timestamp("2024-08-14 12:30", tz="UTC").timestamp())
+
+
 def test_default_events_sorted_and_merged():
     start = int(pd.Timestamp("2024-01-01", tz="UTC").timestamp())
     end = int(pd.Timestamp("2025-01-01", tz="UTC").timestamp())

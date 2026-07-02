@@ -68,12 +68,21 @@ def fomc_events(start_ts: int, end_ts: int) -> list[int]:
     return events
 
 
-def load_news_csv(path: str | Path) -> list[int]:
-    """Load event timestamps from a CSV with a 'ts'/'timestamp'/'datetime' column."""
+def load_news_csv(path: str | Path,
+                  impact_filter: tuple[str, ...] | None = None) -> list[int]:
+    """Load event timestamps from a CSV with a 'ts'/'timestamp'/'datetime' column.
+
+    If the file has an ``impact`` column and ``impact_filter`` is given,
+    only rows whose impact matches (case-insensitive) are kept — handy for
+    calendars that mix high/medium/low rows.
+    """
     import pandas as pd
 
     df = pd.read_csv(path)
     cols = {c.lower(): c for c in df.columns}
+    if impact_filter is not None and "impact" in cols:
+        wanted = {s.lower() for s in impact_filter}
+        df = df[df[cols["impact"]].astype(str).str.lower().isin(wanted)]
     for key in ("ts", "timestamp", "time", "datetime", "date"):
         if key in cols:
             col = df[cols[key]]
