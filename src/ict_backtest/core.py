@@ -193,6 +193,12 @@ class FVG:
     ``confirm_index`` = i+2. ``touch_index`` is the first later bar that
     trades back into the zone; ``fill_index`` the first bar that fully
     closes the gap (zone consumed). -1 sentinels mean "never".
+
+    Inversion (IFVG): ``invert_index`` is the first bar whose *close*
+    trades fully through the gap — the gap flips polarity (a failed
+    bullish FVG becomes resistance; a failed bearish FVG becomes
+    support) and is traded on the retest.  ``invert_fail_index`` is the
+    first later close back through the other side, ending the inversion.
     """
 
     index: int
@@ -202,6 +208,8 @@ class FVG:
     confirm_index: int
     touch_index: int = -1
     fill_index: int = -1
+    invert_index: int = -1
+    invert_fail_index: int = -1
 
 
 @dataclass(slots=True)

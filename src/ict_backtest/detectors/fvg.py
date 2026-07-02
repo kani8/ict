@@ -35,6 +35,8 @@ def detect_fvgs(
     bull_mask = l[2:] > h[:-2]
     bear_mask = h[2:] < l[:-2]
 
+    c = candles.close
+
     for i in np.flatnonzero(bull_mask):
         i = int(i)
         zone_lo, zone_hi = float(h[i]), float(l[i + 2])
@@ -43,8 +45,13 @@ def detect_fvgs(
         after = i + 3
         touch = _first_true(l[after:n] <= zone_hi, after) if after < n else -1
         fill = _first_true(l[after:n] <= zone_lo, after) if after < n else -1
+        invert = _first_true(c[after:n] < zone_lo, after) if after < n else -1
+        invert_fail = -1
+        if invert != -1 and invert + 1 < n:
+            invert_fail = _first_true(c[invert + 1 : n] > zone_hi, invert + 1)
         gaps.append(FVG(index=i, low=zone_lo, high=zone_hi, direction=BULL,
-                        confirm_index=i + 2, touch_index=touch, fill_index=fill))
+                        confirm_index=i + 2, touch_index=touch, fill_index=fill,
+                        invert_index=invert, invert_fail_index=invert_fail))
 
     for i in np.flatnonzero(bear_mask):
         i = int(i)
@@ -54,8 +61,13 @@ def detect_fvgs(
         after = i + 3
         touch = _first_true(h[after:n] >= zone_lo, after) if after < n else -1
         fill = _first_true(h[after:n] >= zone_hi, after) if after < n else -1
+        invert = _first_true(c[after:n] > zone_hi, after) if after < n else -1
+        invert_fail = -1
+        if invert != -1 and invert + 1 < n:
+            invert_fail = _first_true(c[invert + 1 : n] < zone_lo, invert + 1)
         gaps.append(FVG(index=i, low=zone_lo, high=zone_hi, direction=BEAR,
-                        confirm_index=i + 2, touch_index=touch, fill_index=fill))
+                        confirm_index=i + 2, touch_index=touch, fill_index=fill,
+                        invert_index=invert, invert_fail_index=invert_fail))
 
     gaps.sort(key=lambda g: g.index)
     return gaps

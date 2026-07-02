@@ -72,6 +72,8 @@ class Position:
     entry_trigger: float = 0.0     # raw limit/stop trigger (pre-cost), for
                                    # locating the fill moment in sub-bar data
     entry_raw: float = 0.0         # raw fill basis before cost adjustment
+    initial_sl: float = 0.0        # stop at entry; risk basis for R even if
+                                   # the working stop is later moved (breakeven)
 
 
 @dataclass(slots=True)
@@ -151,12 +153,14 @@ class Broker:
         self.cash += gross - exit_commission
         # trade pnl carries both commissions (entry's already left the cash)
         pnl = gross - exit_commission - p.entry_commission
-        risk = abs(p.entry_price - p.sl) * p.qty if p.sl > 0 else 0.0
+        risk_sl = p.initial_sl if p.initial_sl > 0 else p.sl
+        risk = abs(p.entry_price - risk_sl) * p.qty if risk_sl > 0 else 0.0
         self.trades.append(
             Trade(side=p.side, qty=p.qty, entry_index=p.entry_index, entry_price=p.entry_price,
                   exit_index=i, exit_price=fill, pnl=pnl,
                   r_multiple=pnl / risk if risk > 0 else float("nan"),
-                  reason=reason, tag=p.tag, sl=p.sl, tp=p.tp)
+                  reason=reason, tag=p.tag,
+                  sl=p.initial_sl if p.initial_sl > 0 else p.sl, tp=p.tp)
         )
         self.position = None
 
@@ -168,7 +172,7 @@ class Broker:
                                  entry_index=i, sl=order.sl, tp=order.tp, tag=order.tag,
                                  entry_commission=commission,
                                  entry_type=order.type, entry_trigger=order.price,
-                                 entry_raw=price)
+                                 entry_raw=price, initial_sl=order.sl)
 
 
 @dataclass

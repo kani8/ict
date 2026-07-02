@@ -35,6 +35,16 @@ class SMCConfig:
     # -- time filter -----------------------------------------------------------
     use_killzones: bool = True
     killzones: tuple[str, ...] = ("london", "new_york")
+    killzone_tz: str = "UTC"       # "America/New_York" = DST-correct ET windows
+
+    # -- V2 faithfulness features (all default-off; V1 behavior unchanged) ------
+    entry_confirmation: bool = False   # wait for zone touch + confirming close,
+                                       # then enter at market (no resting limit)
+    breakeven_r: float = 0.0           # move stop to entry at +N R (0 = off)
+    avoid_news: bool = False           # blackout around high-impact releases
+    news_csv: str = ""                 # calendar CSV; empty = built-in NFP+FOMC
+    news_before_min: int = 30
+    news_after_min: int = 60
 
     @classmethod
     def from_toml(cls, path: str | Path) -> "SMCConfig":

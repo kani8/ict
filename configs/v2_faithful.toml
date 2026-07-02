@@ -1,0 +1,41 @@
+# Study V2: "maximum-faithfulness" ICT composition.
+# New study — separate from the concluded V1 (see reports/FINAL_VERDICT.md).
+# Additions over V1: inversion FVGs as first-priority POI, DST-correct ET
+# killzones incl. Silver Bullet, high-impact news blackout (NFP + FOMC),
+# retest-confirmation entries, breakeven at +1R.
+
+[strategy]
+# detectors
+swing_k = 3
+htf_multiplier = 16    # 4h bias from 15m
+eq_tol_atr = 0.25
+min_gap_atr = 0.25
+atr_period = 14
+max_leg_bars = 100
+
+# setup sequencing
+use_htf_bias = true
+sweep_to_mss_bars = 30
+order_expiry_bars = 30
+require_ote = true
+require_discount = true
+poi_priority = ["ifvg", "fvg", "ob"]
+entry_confirmation = true      # touch + confirming close, then market entry
+
+# risk / exits
+stop_buffer_atr = 0.25
+min_rr = 1.5
+default_rr = 2.0
+risk_pct = 1.0
+max_leverage = 5.0
+breakeven_r = 1.0              # stop to entry at +1R
+
+# time filters — canonical ET killzones, DST-correct
+use_killzones = true
+killzone_tz = "America/New_York"
+killzones = ["london", "new_york", "silver_bullet"]
+
+# news blackout (built-in NFP + FOMC calendar; supply news_csv for more)
+avoid_news = true
+news_before_min = 30
+news_after_min = 60

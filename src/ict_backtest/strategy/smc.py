@@ -34,7 +34,7 @@ from ..detectors import (
     detect_structure,
     detect_swings,
 )
-from ..detectors.killzones import BY_NAME, in_killzone
+from ..detectors.killzones import BY_NAME, ET_BY_NAME, in_killzone
 from ..engine import Broker, Order
 from .config import SMCConfig
 
@@ -62,10 +62,22 @@ class SMCStrategy:
         self.bias = self._compute_bias() if cfg.use_htf_bias else np.zeros(len(candles), dtype=int)
 
         if cfg.use_killzones:
-            zones = [BY_NAME[name] for name in cfg.killzones]
-            self.kz_mask = in_killzone(candles.ts, zones)
+            table = ET_BY_NAME if cfg.killzone_tz != "UTC" else BY_NAME
+            zones = [table[name] for name in cfg.killzones]
+            self.kz_mask = in_killzone(candles.ts, zones, cfg.killzone_tz)
         else:
             self.kz_mask = np.ones(len(candles), dtype=bool)
+
+        if cfg.avoid_news:
+            from ..data.news import blackout_mask, default_events, load_news_csv
+
+            events = (load_news_csv(cfg.news_csv) if cfg.news_csv
+                      else default_events(int(candles.ts[0]),
+                                          int(candles.ts[-1]) + candles.timeframe_s))
+            self.news_mask = blackout_mask(candles.ts, events,
+                                           cfg.news_before_min, cfg.news_after_min)
+        else:
+            self.news_mask = np.zeros(len(candles), dtype=bool)
 
         # per-bar lookups
         self._sweeps_at: dict[int, list] = {}
@@ -79,6 +91,7 @@ class SMCStrategy:
         self._armed: list[_ArmedSweep] = []
         self._pending_order_id: int | None = None
         self._pending_poi_death: int = -1
+        self._await: dict | None = None   # confirmation-mode staged setup
 
     # ------------------------------------------------------------------
 
@@ -125,21 +138,89 @@ class SMCStrategy:
         # drop stale sweeps
         self._armed = [a for a in self._armed if i - a.bar <= cfg.sweep_to_mss_bars]
 
-        # 2. on a structure break in the sweep's direction, stage the entry
+        # 2. manage an open position (breakeven trail), nothing else while in it
         if broker.position is not None:
+            self._await = None
+            self._manage(i, broker)
             return
+
+        # 2b. confirmation mode: a staged setup waits for touch + confirming close
+        if self._await is not None:
+            self._process_await(i, broker)
+            if broker.pending:
+                return
+
+        # 3. on a structure break in the sweep's direction, stage the entry
         for ev in self._events_at.get(i, ()):  # close-confirmed at i
             matches = [a for a in self._armed if a.direction == ev.direction]
             if not matches:
                 continue
             if cfg.use_htf_bias and self.bias[i] != ev.direction:
                 continue
-            if not self.kz_mask[i]:
+            if not self.kz_mask[i] or self.news_mask[i]:
                 continue
             sweep = max(matches, key=lambda a: a.bar)
             self._stage_entry(i, ev.direction, sweep, broker)
             self._armed = [a for a in self._armed if a.direction != ev.direction]
             break
+
+    # ------------------------------------------------------------------
+
+    def _manage(self, i: int, broker: Broker) -> None:
+        """Move the stop to entry once the trade has run ``breakeven_r`` R."""
+        cfg = self.cfg
+        p = broker.position
+        if cfg.breakeven_r <= 0 or p is None or p.initial_sl <= 0:
+            return
+        risk = abs(p.entry_price - p.initial_sl)
+        if risk <= 0:
+            return
+        unrealized = p.side * (float(self.candles.close[i]) - p.entry_price)
+        if unrealized >= cfg.breakeven_r * risk:
+            if p.side == BULL and p.sl < p.entry_price:
+                p.sl = p.entry_price
+            elif p.side == BEAR and (p.sl > p.entry_price or p.sl == 0):
+                p.sl = p.entry_price
+
+    def _process_await(self, i: int, broker: Broker) -> None:
+        """Trigger, keep, or drop the confirmation-mode setup at bar i's close."""
+        a = self._await
+        assert a is not None
+        if i > a["expiry"] or (a["death"] != -1 and i >= a["death"]):
+            self._await = None
+            return
+        c = float(self.candles.close[i])
+        direction = a["direction"]
+        if direction == BULL:
+            violated = c <= a["stop"]
+            touched = float(self.candles.low[i]) <= a["trigger"]
+            confirmed = c > a["trigger"]
+        else:
+            violated = c >= a["stop"]
+            touched = float(self.candles.high[i]) >= a["trigger"]
+            confirmed = c < a["trigger"]
+        if violated:
+            self._await = None
+            return
+        if not (touched and confirmed) or self.news_mask[i]:
+            return  # keep waiting
+
+        stop = a["stop"]
+        risk = (c - stop) if direction == BULL else (stop - c)
+        if risk <= 0:
+            self._await = None
+            return
+        target = self._liquidity_target(direction, i, c, risk)
+        equity = broker.equity
+        qty = (equity * self.cfg.risk_pct / 100.0) / risk
+        qty = min(qty, equity * self.cfg.max_leverage / c)
+        if qty <= 0:
+            self._await = None
+            return
+        broker.submit(Order(side=direction, qty=qty, type="market",
+                            sl=stop, tp=target,
+                            tag=f"smc_confirm_{'long' if direction == BULL else 'short'}"))
+        self._await = None
 
     # ------------------------------------------------------------------
 
@@ -155,7 +236,17 @@ class SMCStrategy:
         bar's close, so acting on ``i >= death_index`` is causal).
         """
         for kind in self.cfg.poi_priority:
-            if kind == "fvg":
+            if kind == "ifvg":
+                # inverted gap: an opposite-direction FVG that the displacement
+                # leg closed through now acts as support/resistance
+                cands = [g for g in self.fvgs
+                         if g.direction == -direction and g.invert_index != -1
+                         and s < g.invert_index <= m
+                         and (g.invert_fail_index == -1 or g.invert_fail_index > m)]
+                if cands:
+                    g = max(cands, key=lambda g: g.invert_index)
+                    return g.low, g.high, g.invert_fail_index
+            elif kind == "fvg":
                 cands = [g for g in self.fvgs
                          if g.direction == direction and s < g.confirm_index <= m
                          and (g.fill_index == -1 or g.fill_index > m)]
@@ -222,6 +313,19 @@ class SMCStrategy:
         qty = (equity * cfg.risk_pct / 100.0) / risk
         qty = min(qty, equity * cfg.max_leverage / entry)
         if qty <= 0:
+            return
+
+        if cfg.entry_confirmation:
+            # faithful "wait for the retest + confirming close" entry: no
+            # resting limit — arm a watcher that enters at market only after
+            # price trades into the zone and closes back on the right side
+            self._await = {
+                "direction": direction,
+                "trigger": entry,
+                "stop": stop,
+                "expiry": m + cfg.order_expiry_bars,
+                "death": poi_death,
+            }
             return
 
         if self._pending_order_id is not None:

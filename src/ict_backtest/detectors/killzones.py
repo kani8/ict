@@ -40,10 +40,32 @@ DEFAULT_KILLZONES = [LONDON, NEW_YORK]
 
 BY_NAME = {kz.name: kz for kz in (LONDON, NEW_YORK, LONDON_CLOSE, ASIAN, SILVER_BULLET)}
 
+# ICT's canonical definitions are New York local time; evaluating them in a
+# real timezone (killzone_tz = "America/New_York") makes them DST-correct,
+# unlike the fixed-UTC approximations above.
+ET_BY_NAME = {
+    "asian": Killzone("asian", 20.0, 22.0),
+    "london": Killzone("london", 2.0, 5.0),
+    "new_york": Killzone("new_york", 7.0, 9.0),
+    "london_close": Killzone("london_close", 10.0, 12.0),
+    "silver_bullet": Killzone("silver_bullet", 10.0, 11.0),
+}
 
-def in_killzone(ts: np.ndarray, killzones: list[Killzone]) -> np.ndarray:
-    """Boolean mask over bars whose open timestamp falls in any killzone."""
-    hour = (ts % 86400) / 3600.0
+
+def in_killzone(ts: np.ndarray, killzones: list[Killzone], tz: str = "UTC") -> np.ndarray:
+    """Boolean mask over bars whose open timestamp falls in any killzone.
+
+    ``tz`` names the timezone the killzone hours are expressed in.  "UTC"
+    uses fast modular arithmetic; anything else (e.g. "America/New_York")
+    converts properly, including DST transitions.
+    """
+    if tz == "UTC":
+        hour = (ts % 86400) / 3600.0
+    else:
+        import pandas as pd
+
+        idx = pd.to_datetime(ts, unit="s", utc=True).tz_convert(tz)
+        hour = idx.hour.to_numpy() + idx.minute.to_numpy() / 60.0 + idx.second.to_numpy() / 3600.0
     mask = np.zeros(len(ts), dtype=bool)
     for kz in killzones:
         mask |= kz.contains(hour)

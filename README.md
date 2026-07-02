@@ -200,6 +200,32 @@ sequence, in order:
    [`reports/FINAL_VERDICT.md`](reports/FINAL_VERDICT.md). That is a
    finished research result, not a failure of the tooling.
 
+## Study V2: maximum-faithfulness variant (open, preregistered)
+
+V1's verdict binds the *canonical* composition. Study V2 adds the remaining
+major teachings and is preregistered as a **new** study
+([`reports/PREREGISTRATION_V2.md`](reports/PREREGISTRATION_V2.md), frozen
+config [`configs/v2_faithful.toml`](configs/v2_faithful.toml)):
+
+- **Inversion FVGs (IFVG)** — a gap the displacement leg *closes through*
+  flips polarity and becomes the first-priority entry zone on the retest
+  (`FVG.invert_index` / `invert_fail_index`, POI kind `"ifvg"`).
+- **DST-correct killzones** — canonical New-York-time windows (London
+  02–05, NY 07–09, Silver Bullet 10–11 ET) evaluated through
+  `America/New_York`, not fixed-UTC approximations.
+- **News blackout** — no signals 30 min before / 60 min after high-impact
+  releases; built-in NFP first-Friday + Fed-published FOMC calendar
+  2023–2026, CSV override for full calendars (`data/news.py`).
+- **Retest-confirmation entries** — instead of a resting limit, wait for
+  price to trade into the zone *and close back on the right side*, then
+  enter at market (the brief's "wait for the confirming close" rule).
+- **Breakeven management** — stop moves to entry at +1R; R accounting
+  stays anchored to the initial stop.
+
+Holdouts (untouched): SOLUSDT 2023–2026 and BTCUSDT 2019–2022, 15m + 1m,
+run once each at the frozen commit. Decision rule is declared in the
+preregistration; a fail closes the mechanical-ICT program here.
+
 ## Testing on index futures / equities (ES, SPY, other high-liquidity markets)
 
 ICT's own teaching centers on ES/NQ futures and FX, so index markets are
