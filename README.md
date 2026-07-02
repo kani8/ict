@@ -12,21 +12,20 @@ sources of backtest deception: lookahead bias, intrabar wishful thinking, and
 ignored costs. No finite harness rules out every artifact; this one makes the
 known ones testable.
 
-## ⚠️ Real-market verdict (2026-07-01): FAILED VALIDATION
+## 🛑 FINAL VERDICT (2026-07-01): FAILED CONFIRMATION — research concluded
 
-An independent audit ran the predeclared default configuration on Binance
-BTCUSDT 15m, 2023-01-01 → 2026-07-01: **−34.5% (conservative fills), −5.6%
-even at zero costs, losses in every calendar slice, p = 1.0 vs the random
-control.** No gross edge was detected at the audited commit (`127e2c7`) on
-this market/period. Full numbers, robustness table, and the decision rule:
-[`reports/VERDICT_btc15m_2023-2026.md`](reports/VERDICT_btc15m_2023-2026.md).
+The preregistered stopping rule has fired. The frozen specification
+(`543ec12`) was run once on the untouched ETHUSDT holdout with 1m execution
+resolution: **−12.9%, PF 0.87, mean R −0.18 (CI straddling zero), null
+p = 0.53.** Combined with the original BTC failure (−34.5%; −5.6% at zero
+costs; p = 1.0), the joint pass criterion is mathematically unreachable.
 
-**That BTC sample is burned** — do not tune parameters against it. The
-audit-prompted fixes (matched null, block bootstrap, OB lifecycle filtering,
-1m intrabar resolution) changed the entry set, so current HEAD is a *revised*
-strategy; its regression numbers on the burned sample (see the verdict
-addendum) are software diagnostics, not validation. The revision awaits a
-frozen one-shot test on untouched data.
+**This composition is closed: no deployment, no further tuning, no
+re-testing.** Full record: [`reports/FINAL_VERDICT.md`](reports/FINAL_VERDICT.md)
+and [`reports/VERDICT_btc15m_2023-2026.md`](reports/VERDICT_btc15m_2023-2026.md).
+The harness remains reusable for new, separately preregistered hypotheses;
+an ES/index-futures run would be exploratory only and cannot alter this
+verdict.
 
 ---
 
@@ -193,12 +192,12 @@ sequence, in order:
    sub-bar touch order; the policy only breaks ties within a single sub-bar
    or where coverage is missing. This collapses the conservative/optimistic
    spread (12 ambiguous trades flipped the BTC result by ~$36k of PnL).
-5. **Freeze the specification**, then one confirmatory run on untouched
-   instruments/periods (e.g. ETHUSDT, FX majors, pre-2023 BTC), fetched at
-   both the trading timeframe and 1m for fill resolution. Ablations
-   (killzones off, OTE off, sweep-gate off) only as post-hoc descriptive
-   diagnostics, labeled as such.
-6. If still negative or indistinguishable from zero: **stop.** That is a
+5. ~~Freeze the specification, then one confirmatory run on untouched
+   data~~ — done: spec frozen at `543ec12`, preregistered ETHUSDT holdout
+   run once with 1m resolution. **Negative and inconclusive.**
+6. ~~If still negative or indistinguishable from zero: stop~~ — **stopped.**
+   The stopping rule fired on 2026-07-01; see
+   [`reports/FINAL_VERDICT.md`](reports/FINAL_VERDICT.md). That is a
    finished research result, not a failure of the tooling.
 
 ## Testing on index futures / equities (ES, SPY, other high-liquidity markets)
