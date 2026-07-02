@@ -8,10 +8,11 @@
 
 ## Hypothesis
 
-A mechanized narrative — a weighted vote of 4h structure, daily
+A mechanized narrative — a weighted vote of 4h, daily, and weekly
 structure, draw-on-liquidity imbalance (untaken daily pools + unfilled
-daily FVGs above vs. below price), and IPDA 20-day range events
-(close-breaks = continuation; sweep-and-recover = reversal) — identifies
+daily FVGs above vs. below price), and IPDA 20/40/60-day range events
+(close-breaks = continuation; sweep-and-recover = reversal; the windows
+vote so cross-horizon agreement scales conviction) — identifies
 directional regimes with enough reliability that the ICT trigger stack
 (sweep → MSS → IFVG/FVG/OB retest confirmation) extracts a positive
 after-cost edge. A conviction threshold enforces "no narrative, no

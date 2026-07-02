@@ -36,29 +36,40 @@ def test_broadcast_visibility_rule():
 def test_ipda_expansion_and_sweep_recovery():
     flat = [100.0] * 25
     breakout = _daily(flat + [103.0, 103.5])           # closes above 20d high
-    states = _ipda_states(breakout, ipda_days=20, hold_days=10)
+    states = _ipda_states(breakout, windows=(20,), hold_days=10)
     assert states[25] == BULL and states[26] == BULL
 
     breakdown = _daily(flat + [97.0])                  # closes below 20d low
-    assert _ipda_states(breakdown, 20, 10)[25] == BEAR
+    assert _ipda_states(breakdown, (20,), 10)[25] == BEAR
 
     # sweep of the 20d low with a close back above it -> bullish reversal
     ohlc = [(100, 100.1, 99.9, 100.0)] * 25 + [(100, 100.2, 98.0, 100.05)]
     sweep = make_candles(ohlc, timeframe_s=86_400)
-    assert _ipda_states(sweep, 20, 10)[25] == BULL
+    assert _ipda_states(sweep, (20,), 10)[25] == BULL
 
     # sweep of the 20d high with a close back below -> bearish reversal
     ohlc = [(100, 100.1, 99.9, 100.0)] * 25 + [(100, 102.0, 99.9, 99.95)]
     sweep_hi = make_candles(ohlc, timeframe_s=86_400)
-    assert _ipda_states(sweep_hi, 20, 10)[25] == BEAR
+    assert _ipda_states(sweep_hi, (20,), 10)[25] == BEAR
 
 
 def test_ipda_hold_expires():
     flat = [100.0] * 25
     series = _daily(flat + [103.0] + [103.0] * 15)     # one event, then quiet
-    states = _ipda_states(series, ipda_days=20, hold_days=5)
+    states = _ipda_states(series, windows=(20,), hold_days=5)
     assert states[25] == BULL
     assert states[31] == 0.0                           # ttl exhausted
+
+
+def test_ipda_multi_window_grades_by_horizon_agreement():
+    # break after 65 flat bars: all of 20/40/60 agree -> full-strength vote
+    late_break = _daily([100.0] * 65 + [103.0])
+    states = _ipda_states(late_break, windows=(20, 40, 60), hold_days=10)
+    assert states[65] == pytest.approx(1.0)
+    # break after only 25 bars: 40/60-day windows abstain -> graded vote
+    early_break = _daily([100.0] * 25 + [103.0])
+    states = _ipda_states(early_break, windows=(20, 40, 60), hold_days=10)
+    assert states[25] == pytest.approx(1.0 / 3.0)
 
 
 def test_dol_states_signs():
@@ -82,8 +93,12 @@ def test_engine_score_and_conviction():
     assert np.all((eng.bias != 0) == (np.abs(eng.score) >= 0.5))
     assert (eng.bias == 0).any()               # abstention actually happens
     assert (eng.bias != 0).any()               # ...but not always
+    assert set(eng.factors) == set(NarrativeEngine.FACTORS)
+    assert "struct_wk" in eng.factors and len(eng.factors["struct_wk"]) == len(candles)
     with pytest.raises(ValueError):
-        NarrativeEngine(candles, weights=(0.0, 0.0, 0.0, 0.0))
+        NarrativeEngine(candles, weights=(0.0,) * 5)
+    with pytest.raises(ValueError):
+        NarrativeEngine(candles, weights=(1.0,) * 4)   # wrong length
 
 
 def test_strategy_narrative_mode_gates_trades():
@@ -132,7 +147,8 @@ def test_narrative_prefix_consistency():
 def test_v3_frozen_config_loads_and_runs():
     cfg = SMCConfig.from_toml("configs/v3_origin.toml")
     assert cfg.bias_mode == "narrative"
-    assert cfg.narrative_weights == (1.0, 1.0, 1.0, 1.0)
+    assert cfg.narrative_weights == (1.0,) * 5
+    assert cfg.ipda_windows == (20, 40, 60)
     candles = synthetic_candles(n=12_000, seed=4, base_vol=0.004)
     result = Backtester(cost=CostModel(), initial_equity=100_000).run(
         candles, SMCStrategy(candles, cfg))

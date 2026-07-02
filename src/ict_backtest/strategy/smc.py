@@ -78,7 +78,7 @@ class SMCStrategy:
                 mtf_multiplier=cfg.htf_multiplier,
                 htf_multiplier=cfg.bias_htf2_multiplier or 96,
                 eq_tol_atr=cfg.eq_tol_atr, min_gap_atr=cfg.min_gap_atr,
-                atr_period=cfg.atr_period, ipda_days=cfg.ipda_days,
+                atr_period=cfg.atr_period, ipda_windows=cfg.ipda_windows,
                 ipda_hold_days=cfg.ipda_hold_days,
                 weights=cfg.narrative_weights,
                 min_conviction=cfg.narrative_min_conviction,

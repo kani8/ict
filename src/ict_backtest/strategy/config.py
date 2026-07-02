@@ -20,11 +20,13 @@ class SMCConfig:
     # -- setup sequencing ------------------------------------------------------
     use_htf_bias: bool = True      # only trade in the HTF structure direction
     bias_mode: str = "structure"   # "structure" (V1/V2) or "narrative" (V3):
-                                   # weighted vote of 4h+daily structure, draw
-                                   # on liquidity, and IPDA range events
-    narrative_weights: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+                                   # weighted vote of 4h/daily/weekly structure,
+                                   # draw on liquidity, and IPDA range events
+    # factor order: struct_4h, struct_daily, struct_weekly, dol, ipda
+    narrative_weights: tuple[float, ...] = (1.0, 1.0, 1.0, 1.0, 1.0)
     narrative_min_conviction: float = 0.5  # |score| below this = no bias, no trade
-    ipda_days: int = 20            # IPDA data-range lookback (daily bars)
+    ipda_windows: tuple[int, ...] = (20, 40, 60)  # ICT's IPDA data ranges — his
+                                   # stated stand-in for weekly/monthly context
     ipda_hold_days: int = 10       # how long a range event colors the narrative
     # bias-dominance gates: HTF judgment as the majority contributor, with the
     # sweep/MSS/POI mechanics acting only as triggers (all default-off)
@@ -73,7 +75,7 @@ class SMCConfig:
         if unknown:
             raise ValueError(f"unknown config keys: {sorted(unknown)}")
         kwargs = dict(section)
-        for key in ("poi_priority", "killzones", "narrative_weights"):
+        for key in ("poi_priority", "killzones", "narrative_weights", "ipda_windows"):
             if key in kwargs:
                 kwargs[key] = tuple(kwargs[key])
         return cls(**kwargs)

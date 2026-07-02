@@ -253,8 +253,14 @@ four codified narrative factors (per daily/4h bar, close-visible only):
 |---|---|
 | `struct_mtf` | 4h structure direction (last BOS/MSS) |
 | `struct_htf` | daily structure direction |
+| `struct_wk` | weekly structure direction — the highest timeframe with enough bars to confirm swings on a multi-year sample |
 | `dol` | draw on liquidity: untaken daily pools + unfilled daily FVGs above vs. below price |
-| `ipda` | IPDA 20-day data-range events: close-break = continuation, sweep-and-recover = reversal, held for N days |
+| `ipda` | IPDA **20/40/60-day** data-range events (ICT's stated stand-in for weekly/monthly context): close-break = continuation, sweep-and-recover = reversal; the three windows vote, so cross-horizon agreement scales conviction |
+
+Why not monthly candles: ~42 monthly bars in a 3.5-year sample yield a
+handful of structure events confirming months late — statistically the
+factor would just re-measure drift, which the null already controls for.
+The 60-day IPDA range carries the monthly-scale context in testable form.
 
 A conviction threshold enforces *no narrative, no trade* (`bias_mode =
 "narrative"`, `narrative_min_conviction`). The ICT trigger stack

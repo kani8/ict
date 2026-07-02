@@ -6,15 +6,20 @@ of narrative factors, each an attempt to codify one input ICT cites when
 
 * ``struct_mtf``  — 4h structure direction (last BOS/MSS).
 * ``struct_htf``  — daily structure direction.
+* ``struct_wk``   — weekly structure direction (the highest timeframe with
+                    enough bars to confirm swings on a multi-year sample;
+                    monthly candles produce too few events to test).
 * ``dol``         — draw on liquidity: imbalance of untaken daily liquidity
                     pools and unfilled daily FVGs above vs. below price.
                     Price is assumed to seek the heavier, nearer draw.
-* ``ipda``        — IPDA data-range logic: a close-break *above* the prior
-                    20-day high is bullish continuation; a *sweep* of the
-                    prior 20-day low with a close back above it is bullish
-                    reversal (liquidity purged, rally begins) — mirrored
-                    bearish.  The latest event holds for a fixed number of
-                    daily bars.
+* ``ipda``        — IPDA data-range logic across ICT's full 20/40/60-day
+                    triple (his stated substitute for calendar weekly and
+                    monthly context): a close-break *above* a prior range
+                    high is continuation; a *sweep* of a range low with a
+                    close back above it is reversal — mirrored bearish.
+                    Each window votes; the factor is their average, so
+                    agreement across horizons scales conviction.  Events
+                    hold for a fixed number of daily bars.
 
 Each factor produces a per-daily-bar value in [-1, +1]; values become
 visible to base bars only *after* the HTF bar closes (same bucket rule as
@@ -90,7 +95,17 @@ def _dol_states(htf: Candles, swing_k: int, eq_tol_atr: float,
     return states
 
 
-def _ipda_states(htf: Candles, ipda_days: int, hold_days: int) -> np.ndarray:
+def _ipda_states(htf: Candles, windows: tuple[int, ...], hold_days: int) -> np.ndarray:
+    """Average of per-window IPDA votes; unavailable windows abstain (0)."""
+    if not windows:
+        raise ValueError("ipda_windows must not be empty")
+    acc = np.zeros(len(htf))
+    for w in windows:
+        acc += _ipda_single(htf, int(w), hold_days)
+    return acc / len(windows)
+
+
+def _ipda_single(htf: Candles, ipda_days: int, hold_days: int) -> np.ndarray:
     """IPDA range events per daily bar: break/sweep-recovery of the prior
     ``ipda_days`` high/low, each holding for ``hold_days``."""
     h, l, c = htf.high, htf.low, htf.close
@@ -121,7 +136,7 @@ def _ipda_states(htf: Candles, ipda_days: int, hold_days: int) -> np.ndarray:
 class NarrativeEngine:
     """Aggregates narrative factors into a per-base-bar bias array."""
 
-    FACTORS = ("struct_mtf", "struct_htf", "dol", "ipda")
+    FACTORS = ("struct_mtf", "struct_htf", "struct_wk", "dol", "ipda")
 
     def __init__(
         self,
@@ -129,28 +144,36 @@ class NarrativeEngine:
         swing_k: int = 3,
         mtf_multiplier: int = 16,      # 4h from 15m
         htf_multiplier: int = 96,      # daily from 15m
+        wk_multiplier: int = 0,        # weekly; 0 = derive from bar duration
         eq_tol_atr: float = 0.25,
         min_gap_atr: float = 0.25,
         atr_period: int = 14,
-        ipda_days: int = 20,
+        ipda_windows: tuple[int, ...] = (20, 40, 60),
         ipda_hold_days: int = 10,
-        weights: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
+        weights: tuple[float, ...] = (1.0, 1.0, 1.0, 1.0, 1.0),
         min_conviction: float = 0.5,
     ) -> None:
         n = len(candles)
         mtf, mtf_last = resample(candles, mtf_multiplier)
         htf, htf_last = resample(candles, htf_multiplier)
+        if wk_multiplier <= 0:
+            wk_multiplier = max(int(7 * 86400 // candles.timeframe_s), htf_multiplier * 2)
+        wk, wk_last = resample(candles, wk_multiplier)
 
         self.factors = {
             "struct_mtf": _broadcast(n, mtf_last, _structure_states(mtf, swing_k)),
             "struct_htf": _broadcast(n, htf_last, _structure_states(htf, swing_k)),
+            "struct_wk": _broadcast(n, wk_last, _structure_states(wk, swing_k)),
             "dol": _broadcast(n, htf_last, _dol_states(htf, swing_k, eq_tol_atr,
                                                        min_gap_atr, atr_period)),
-            "ipda": _broadcast(n, htf_last, _ipda_states(htf, ipda_days, ipda_hold_days)),
+            "ipda": _broadcast(n, htf_last, _ipda_states(htf, ipda_windows, ipda_hold_days)),
         }
         w = np.asarray(weights, dtype=float)
         if len(w) != len(self.FACTORS) or w.sum() <= 0:
-            raise ValueError("weights must be four non-negative numbers with a positive sum")
+            raise ValueError(
+                f"weights must be {len(self.FACTORS)} non-negative numbers "
+                "with a positive sum (order: " + ", ".join(self.FACTORS) + ")"
+            )
         stacked = np.vstack([self.factors[name] for name in self.FACTORS])
         self.score = (w[:, None] * stacked).sum(axis=0) / w.sum()
         self.bias = np.where(self.score >= min_conviction, BULL,

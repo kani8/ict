@@ -13,12 +13,13 @@ min_gap_atr = 0.25
 atr_period = 14
 max_leg_bars = 100
 
-# narrative bias (V3)
+# narrative bias (V3) — macro stack: 4h -> daily -> weekly structure, plus
+# ICT's IPDA 20/40/60-day data ranges as the weekly/monthly-context stand-in
 bias_mode = "narrative"
 bias_htf2_multiplier = 96      # daily timeframe for the HTF factors
-narrative_weights = [1.0, 1.0, 1.0, 1.0]   # struct_4h, struct_daily, dol, ipda
+narrative_weights = [1.0, 1.0, 1.0, 1.0, 1.0]  # struct_4h, struct_daily, struct_weekly, dol, ipda
 narrative_min_conviction = 0.5
-ipda_days = 20
+ipda_windows = [20, 40, 60]
 ipda_hold_days = 10
 
 # bias-dominance gates (kept from V2.1)
