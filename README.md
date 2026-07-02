@@ -10,6 +10,20 @@ definitions (order blocks, fair value gaps, liquidity sweeps, market structure,
 OTE, killzones), and the harness is engineered so that a positive result cannot
 be an artifact of lookahead bias, intrabar wishful thinking, or ignored costs.
 
+## ⚠️ Real-market verdict (2026-07-01): FAILED VALIDATION
+
+An independent audit ran the predeclared default configuration on Binance
+BTCUSDT 15m, 2023-01-01 → 2026-07-01: **−34.5% (conservative fills), −5.6%
+even at zero costs, losses in every calendar slice, p = 1.0 vs the random
+control.** No gross edge exists in this composition on this market/period.
+Full numbers, robustness table, and the decision rule going forward:
+[`reports/VERDICT_btc15m_2023-2026.md`](reports/VERDICT_btc15m_2023-2026.md).
+
+**That BTC sample is burned** — do not tune parameters against it. The audit
+also flagged three harness improvements (matched null, block bootstrap, OB
+lifecycle filtering), all fixed since; none can change the verdict, since the
+strategy loses before costs.
+
 ---
 
 ## Architecture
@@ -92,10 +106,14 @@ Every knob lives in [`configs/default.toml`](configs/default.toml).
   not at the level.
 - **Costs on every fill.** Half-spread both ways, per-side commission, extra
   slippage on stop/market fills.
-- **Null-model statistics.** A backtest is only called significant if it beats
-  a Monte-Carlo distribution of random-entry strategies matched on trade
-  frequency, holding period, direction mix, and killzone universe — which
-  controls for market drift. Per-trade R also gets a bootstrap CI.
+- **Null-model statistics.** The primary control (`matched_baseline_test`)
+  replays the strategy's *own trades* — side, stop/target geometry, risk
+  sizing — at random times in the same killzone universe, so only the entry
+  timing is destroyed; matching diagnostics (trade count, exposure, holding)
+  are printed next to the p-value rather than assumed. A simpler drift-only
+  random-entry control remains available and is labeled descriptive. Mean
+  trade R gets a **block bootstrap** CI (preserves regime clustering, unlike
+  the IID bootstrap).
 
 ## Quickstart
 
@@ -110,7 +128,7 @@ uv run ict-backtest run --data data/btc_15m.parquet --config configs/default.tom
 uv run ict-backtest synth --bars 35040 --out data/synth.parquet
 uv run ict-backtest run --data data/synth.parquet --validate 200
 
-uv run pytest        # 38 tests, ~1s
+uv run pytest        # 48 tests, ~3s
 ```
 
 Python API:
@@ -118,30 +136,30 @@ Python API:
 ```python
 from ict_backtest import Backtester, CostModel, SMCConfig, SMCStrategy
 from ict_backtest.data import load_candles
-from ict_backtest.analytics import compute_metrics, random_baseline_test
+from ict_backtest.analytics import compute_metrics, matched_baseline_test
 
 candles = load_candles("data/btc_15m.parquet")
 bt = Backtester(cost=CostModel(spread_bps=1, commission_bps=2, slippage_bps=1))
 result = bt.run(candles, SMCStrategy(candles, SMCConfig()))
 print(compute_metrics(result))
-print(random_baseline_test(candles, result, bt, n_sims=200))
+print(matched_baseline_test(candles, result, bt, n_sims=200))
 ```
 
 ## Included experiments (synthetic, reproducible)
 
 Real-market endpoints are unreachable from the build environment, so the
-committed reports use the synthetic generator — which doubles as a calibration
-of the harness itself:
+committed reports use the synthetic generator — a calibration of the harness,
+not evidence about markets (regenerated after the audit fixes, which made
+entries stricter and rarer):
 
 | Regime | Result | Interpretation |
 |---|---|---|
-| [Random walk](reports/synthetic_null.md) (no structure by construction) | 27 trades, −5.5%, p = 0.78 vs null | **Correct null behavior** — an honest harness finds nothing where nothing exists. A "profitable" result here would indicate leakage. |
-| [Persistent trends](reports/synthetic_trending.md) | 12 trades, +8.4%, PF 2.19, p = 0.005 vs null | The pipeline **can** detect exploitable structure when it exists — the machinery discriminates. |
+| [Random walk](reports/synthetic_null.md) (no structure by construction) | 14 trades, +9.3%, p = 0.050, R CI [−0.34, 1.30] | A borderline p on a lucky draw with a **CI straddling zero** — read jointly, correctly rejected. One metric alone would have fooled you; that is why the report prints several. |
+| [Persistent trends](reports/synthetic_trending.md) | 4 trades, +2.0%, p = 0.23 | Sample far too small to conclude anything — and the report says so instead of extrapolating. |
 
-The verdict on real markets is deliberately left to real data: run the
-`fetch` + `run --validate` commands above. The framework will tell you, with a
-p-value, whether the SMC signal beats luck **after costs** — and the bootstrap
-CI will tell you whether the trade sample is even large enough to say.
+The real-market answer came from real data (see the verdict above): 174
+trades over 3.5 years of BTCUSDT 15m, no gross edge, clearly negative after
+costs.
 
 ## Interpreting a run
 
@@ -152,6 +170,24 @@ CI will tell you whether the trade sample is even large enough to say.
 - Re-run with `--intrabar-policy optimistic` to bound the intrabar ambiguity:
   the truth lies between the two policies; a strategy that only works under
   the optimistic one is an artifact.
+
+## Roadmap (post-verdict decision rule)
+
+The BTC 2023–2026 sample is observed and off-limits for tuning. The agreed
+sequence, in order:
+
+1. ~~Matched, risk-geometry-preserving null with diagnostics~~ — done.
+2. ~~Block bootstrap for dependence-aware CIs~~ — done.
+3. ~~OB lifecycle filtering in POI selection + stale-order cancellation~~ — done.
+4. **1m-data intrabar resolution** at the `_resolve_exits` seam, to collapse
+   the conservative/optimistic spread (12 ambiguous trades flipped the BTC
+   result by ~$36k of PnL).
+5. **Freeze the specification**, then one confirmatory run on untouched
+   instruments/periods (e.g. ETHUSDT, FX majors, pre-2023 BTC). Ablations
+   (killzones off, OTE off, sweep-gate off) only as post-hoc descriptive
+   diagnostics, labeled as such.
+6. If still negative or indistinguishable from zero: **stop.** That is a
+   finished research result, not a failure of the tooling.
 
 ## Extending (designed-for iteration points)
 

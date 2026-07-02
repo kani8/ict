@@ -78,6 +78,7 @@ class SMCStrategy:
 
         self._armed: list[_ArmedSweep] = []
         self._pending_order_id: int | None = None
+        self._pending_poi_death: int = -1
 
     # ------------------------------------------------------------------
 
@@ -106,6 +107,15 @@ class SMCStrategy:
     def on_bar(self, i: int, broker: Broker) -> None:
         cfg = self.cfg
 
+        # 0. a resting order whose POI zone died this bar is stale: the fill
+        #    engine ran first this bar, so if the order were reachable it
+        #    would already be filled — cancel the leftover
+        if (self._pending_order_id is not None
+                and self._pending_poi_death != -1 and i >= self._pending_poi_death):
+            broker.cancel(self._pending_order_id)
+            self._pending_order_id = None
+            self._pending_poi_death = -1
+
         # 1. arm setups from sweeps confirmed at this bar
         for pool in self._sweeps_at.get(i, ()):  # pool.side BEAR = sell-side purge
             direction = BULL if pool.side == BEAR else BEAR
@@ -133,8 +143,17 @@ class SMCStrategy:
 
     # ------------------------------------------------------------------
 
-    def _find_poi(self, direction: int, s: int, m: int) -> tuple[float, float] | None:
-        """Zone (low, high) of the freshest POI created by the displacement leg."""
+    def _find_poi(self, direction: int, s: int, m: int) -> tuple[float, float, int] | None:
+        """Freshest live POI created by the displacement leg.
+
+        Returns ``(zone_low, zone_high, death_index)`` where ``death_index``
+        is the (data-determined) bar at which the zone stops being valid —
+        the FVG's full fill, or the order block's first touch or close-through
+        — or -1 if that never happens.  Zones already dead at the decision
+        bar ``m`` are skipped; ``death_index`` lets the caller cancel a
+        resting order the moment the zone dies later (knowable only at that
+        bar's close, so acting on ``i >= death_index`` is causal).
+        """
         for kind in self.cfg.poi_priority:
             if kind == "fvg":
                 cands = [g for g in self.fvgs
@@ -142,13 +161,17 @@ class SMCStrategy:
                          and (g.fill_index == -1 or g.fill_index > m)]
                 if cands:
                     g = cands[-1]
-                    return g.low, g.high
+                    return g.low, g.high, g.fill_index
             elif kind == "ob":
                 cands = [b for b in self.order_blocks
-                         if b.direction == direction and s <= b.created_index <= m]
+                         if b.direction == direction and s <= b.created_index <= m
+                         and (b.mitigated_index == -1 or b.mitigated_index > m)
+                         and (b.invalidated_index == -1 or b.invalidated_index > m)]
                 if cands:
                     b = cands[-1]
-                    return b.low, b.high
+                    death = min(x for x in (b.mitigated_index, b.invalidated_index)
+                                if x != -1) if (b.mitigated_index, b.invalidated_index) != (-1, -1) else -1
+                    return b.low, b.high, death
         return None
 
     def _stage_entry(self, m: int, direction: int, sweep: _ArmedSweep, broker: Broker) -> None:
@@ -162,7 +185,7 @@ class SMCStrategy:
         poi = self._find_poi(direction, sweep.bar, m)
         if poi is None:
             return
-        poi_lo, poi_hi = poi
+        poi_lo, poi_hi, poi_death = poi
 
         if direction == BULL:
             entry = poi_hi
@@ -208,6 +231,7 @@ class SMCStrategy:
                   sl=stop, tp=target, expiry_index=m + cfg.order_expiry_bars,
                   tag=f"smc_{'long' if direction == BULL else 'short'}")
         )
+        self._pending_poi_death = poi_death
 
     def _liquidity_target(self, direction: int, m: int, entry: float, risk: float) -> float:
         """Nearest live opposing liquidity pool offering >= min_rr, else fixed R."""

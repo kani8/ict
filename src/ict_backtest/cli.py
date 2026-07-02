@@ -12,7 +12,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .analytics import compute_metrics, random_baseline_test, render_report
+from .analytics import compute_metrics, matched_baseline_test, render_report
 from .data import load_candles, synthetic_candles
 from .engine import Backtester, CostModel
 from .strategy import SMCConfig, SMCStrategy
@@ -50,8 +50,10 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
     baseline = None
     if args.validate:
-        baseline = random_baseline_test(candles, result, backtester,
-                                        eligible_mask=strategy.kz_mask, n_sims=args.validate)
+        baseline = matched_baseline_test(candles, result, backtester,
+                                         eligible_mask=strategy.kz_mask, n_sims=args.validate,
+                                         risk_pct=config.risk_pct,
+                                         max_leverage=config.max_leverage)
 
     report = render_report(result, metrics, baseline,
                            title=f"SMC Backtest — {Path(args.data).stem}")

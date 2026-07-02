@@ -8,7 +8,7 @@ import numpy as np
 
 from ..engine import BacktestResult
 from .metrics import Metrics
-from .significance import BaselineTest, bootstrap_ci
+from .significance import BaselineTest, block_bootstrap_ci
 
 
 def _fmt(v: float, nd: int = 2) -> str:
@@ -48,21 +48,35 @@ def render_report(
 
     rs = np.array([t.r_multiple for t in result.trades if not math.isnan(t.r_multiple)])
     if len(rs) >= 5:
-        mean, lo, hi = bootstrap_ci(rs)
+        mean, lo, hi, blen = block_bootstrap_ci(rs)
         verdict = "edge inconsistent with zero" if lo > 0 else "**cannot reject zero edge**" if hi > 0 else "negative edge"
         lines += [
             "",
             "## Statistical validity",
             "",
-            f"- Mean trade R: **{_fmt(mean)}**, 95% bootstrap CI **[{_fmt(lo)}, {_fmt(hi)}]** — {verdict}.",
+            f"- Mean trade R: **{_fmt(mean)}**, 95% block-bootstrap CI **[{_fmt(lo)}, {_fmt(hi)}]** "
+            f"(block length {blen}, preserves trade clustering) — {verdict}.",
         ]
     if baseline is not None and baseline.n_sims > 0:
         sig = "significant at 5%" if baseline.significant_5pct else "**not significant at 5%**"
+        if baseline.kind == "matched":
+            null_desc = (f"Matched-trade null ({baseline.n_sims} sims: the strategy's own trades — "
+                         "side, stop/target geometry, risk sizing — replayed at random eligible times)")
+        else:
+            null_desc = (f"Drift-control null ({baseline.n_sims} sims, random entries at matched "
+                         "frequency; NOT exposure/risk matched — descriptive only)")
         lines += [
-            f"- Random-entry null ({baseline.n_sims} sims, matched frequency/holding/direction/killzones): "
-            f"baseline mean return {_fmt(baseline.baseline_mean_return * 100)}% ± {_fmt(baseline.baseline_std_return * 100)}%, "
+            f"- {null_desc}: "
+            f"null mean return {_fmt(baseline.baseline_mean_return * 100)}% ± {_fmt(baseline.baseline_std_return * 100)}%, "
             f"strategy {_fmt(baseline.strategy_total_return * 100)}%, p = {_fmt(baseline.p_value, 3)} ({sig}).",
         ]
+        d = baseline.diagnostics
+        if d:
+            lines += [
+                f"- Null matching diagnostics: trades {d['strategy_trades']} vs {_fmt(d['null_mean_trades'], 1)} (null mean); "
+                f"exposure {_fmt(d['strategy_exposure_pct'])}% vs {_fmt(d['null_mean_exposure_pct'])}%; "
+                f"mean holding {_fmt(d['strategy_mean_holding_bars'], 1)} vs {_fmt(d['null_mean_holding_bars'], 1)} bars.",
+            ]
 
     if result.trades:
         lines += ["", "## Last trades", "", "| # | Side | Entry bar | Exit bar | R | PnL | Reason |", "|---|---|---|---|---|---|---|"]

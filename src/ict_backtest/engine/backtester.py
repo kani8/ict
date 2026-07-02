@@ -76,6 +76,8 @@ class Trade:
     r_multiple: float         # pnl / initial risk (0 risk -> nan)
     reason: str               # "sl" | "tp" | "eod" | "strategy"
     tag: str = ""
+    sl: float = 0.0           # initial stop/target, kept so null models can
+    tp: float = 0.0           # replay the exact trade geometry
 
     @property
     def holding_bars(self) -> int:
@@ -144,7 +146,7 @@ class Broker:
             Trade(side=p.side, qty=p.qty, entry_index=p.entry_index, entry_price=p.entry_price,
                   exit_index=i, exit_price=fill, pnl=pnl,
                   r_multiple=pnl / risk if risk > 0 else float("nan"),
-                  reason=reason, tag=p.tag)
+                  reason=reason, tag=p.tag, sl=p.sl, tp=p.tp)
         )
         self.position = None
 
