@@ -7,6 +7,12 @@ Accuracy rules baked in:
 * Intrabar ambiguity: if a bar touches both stop and target, the stop is
   assumed to fill first ("conservative" policy — the default). Backtests
   that pass under this assumption are robust to intrabar path uncertainty.
+* Optional finer-timeframe resolution: pass ``intrabar=`` (e.g. 1m candles
+  covering the same period) and ambiguous bars are resolved by walking the
+  sub-bars to find which level was actually touched first; the policy only
+  breaks ties *within* a single sub-bar or where sub-bar data is missing.
+  This also resolves entry-bar ambiguity: a take-profit on the entry bar is
+  granted when the sub-bars show the fill happened before the target touch.
 * Gaps: exits through a gapped open fill at the open, not at the level.
 * Costs: half-spread on every fill, commission per side, extra slippage
   on stop/market fills (limit fills are assumed at the limit).
@@ -62,6 +68,9 @@ class Position:
     tp: float
     tag: str = ""
     entry_commission: float = 0.0
+    entry_type: str = "market"     # order type that opened it
+    entry_trigger: float = 0.0     # raw limit/stop trigger (pre-cost), for
+                                   # locating the fill moment in sub-bar data
 
 
 @dataclass(slots=True)
@@ -156,7 +165,8 @@ class Broker:
         self.cash -= commission
         self.position = Position(side=order.side, qty=order.qty, entry_price=fill,
                                  entry_index=i, sl=order.sl, tp=order.tp, tag=order.tag,
-                                 entry_commission=commission)
+                                 entry_commission=commission,
+                                 entry_type=order.type, entry_trigger=order.price)
 
 
 @dataclass
@@ -181,18 +191,43 @@ class Backtester:
         cost: CostModel | None = None,
         initial_equity: float = 100_000.0,
         intrabar_policy: str = "conservative",
+        intrabar: Candles | None = None,
     ) -> None:
         if intrabar_policy not in ("conservative", "optimistic"):
             raise ValueError("intrabar_policy must be 'conservative' or 'optimistic'")
+        if intrabar is not None and len(intrabar) == 0:
+            intrabar = None
         self.cost = cost or CostModel()
         self.initial_equity = initial_equity
         self.intrabar_policy = intrabar_policy
+        self.intrabar = intrabar
+        self._ib_start: np.ndarray | None = None  # per base bar, sub-bar range
+        self._ib_end: np.ndarray | None = None
+
+    def _map_intrabar(self, candles: Candles) -> None:
+        """Bucket sub-bars into base bars by timestamp: [ts[i], ts[i] + tf)."""
+        if self.intrabar is None:
+            self._ib_start = self._ib_end = None
+            return
+        if self.intrabar.timeframe_s >= candles.timeframe_s:
+            raise ValueError("intrabar data must be a finer timeframe than the base candles")
+        ib_ts = self.intrabar.ts
+        self._ib_start = np.searchsorted(ib_ts, candles.ts, side="left")
+        self._ib_end = np.searchsorted(ib_ts, candles.ts + candles.timeframe_s, side="left")
+
+    def _sub_bars(self, i: int) -> range | None:
+        """Sub-bar index range for base bar i, or None if uncovered."""
+        if self._ib_start is None:
+            return None
+        s, e = int(self._ib_start[i]), int(self._ib_end[i])
+        return range(s, e) if e > s else None
 
     def run(self, candles: Candles, strategy: Strategy) -> BacktestResult:
         broker = Broker(candles, self.cost, self.initial_equity)
         n = len(candles)
         o, h, l, c = candles.open, candles.high, candles.low, candles.close
         equity = np.empty(n)
+        self._map_intrabar(candles)
 
         for i in range(n):
             broker._i = i
@@ -223,13 +258,25 @@ class Backtester:
 
     def _resolve_exits(self, broker: Broker, i: int, open_: float | None,
                        high: float, low: float, entry_bar: bool = False) -> None:
-        # On the entry bar the intrabar path is unknown: under the
-        # conservative policy a same-bar take-profit is never granted
-        # (the touch may have happened before the fill), while a same-bar
-        # stop is always honored.
+        # Without sub-bar data the intrabar path is unknown: under the
+        # conservative policy a same-bar take-profit on the entry bar is
+        # never granted (the touch may have happened before the fill), and
+        # a bar touching both levels resolves to the stop.  With sub-bar
+        # data both ambiguities are resolved by the observed touch order.
         p = broker.position
         assert p is not None
         sl, tp = p.sl, p.tp
+
+        if entry_bar:
+            sub = self._sub_bars(i)
+            if sub is not None:
+                kind = self._entry_bar_touch_ib(p, sub)
+                if kind == "sl":
+                    broker._exit(i, sl, aggressive=True, reason="sl")
+                elif kind == "tp":
+                    broker._exit(i, tp, aggressive=False, reason="tp")
+                return
+
         if p.side == BULL:
             sl_hit = sl > 0 and low <= sl
             tp_hit = tp > 0 and high >= tp
@@ -249,7 +296,13 @@ class Backtester:
         elif tp_gap:
             broker._exit(i, open_, aggressive=False, reason="tp")
         elif sl_hit and tp_hit:
-            if self.intrabar_policy == "conservative":
+            kind = None
+            sub = self._sub_bars(i)
+            if sub is not None:
+                kind = self._first_touch_ib(p.side, sl, tp, sub)
+            if kind is None:
+                kind = "sl" if self.intrabar_policy == "conservative" else "tp"
+            if kind == "sl":
                 broker._exit(i, sl, aggressive=True, reason="sl")
             else:
                 broker._exit(i, tp, aggressive=False, reason="tp")
@@ -257,6 +310,69 @@ class Backtester:
             broker._exit(i, sl, aggressive=True, reason="sl")
         elif tp_hit:
             broker._exit(i, tp, aggressive=False, reason="tp")
+
+    def _first_touch_ib(self, side: int, sl: float, tp: float, sub: range) -> str | None:
+        """Which level a sub-bar walk touches first; policy breaks same-sub-bar ties."""
+        ib = self.intrabar
+        assert ib is not None
+        for j in sub:
+            if side == BULL:
+                sl_t = sl > 0 and ib.low[j] <= sl
+                tp_t = tp > 0 and ib.high[j] >= tp
+            else:
+                sl_t = sl > 0 and ib.high[j] >= sl
+                tp_t = tp > 0 and ib.low[j] <= tp
+            if sl_t and tp_t:
+                return "sl" if self.intrabar_policy == "conservative" else "tp"
+            if sl_t:
+                return "sl"
+            if tp_t:
+                return "tp"
+        return None
+
+    def _entry_bar_touch_ib(self, p: Position, sub: range) -> str | None:
+        """Resolve entry-bar exits by locating the fill moment in sub-bars.
+
+        Finds the first sub-bar where the entry order could fill, then walks
+        forward for stop/target touches.  In the fill sub-bar itself the
+        stop is honored (for a limit the stop lies beyond the trigger, so a
+        touch implies the fill happened first) but a take-profit is granted
+        only under the optimistic policy, since its ordering against the
+        fill inside one sub-bar is still unknown.
+        """
+        ib = self.intrabar
+        assert ib is not None
+        j0 = None
+        for j in sub:
+            if p.entry_type == "market":
+                j0 = j
+                break
+            filled = (
+                ib.low[j] <= p.entry_trigger
+                if (p.entry_type == "limit") == (p.side == BULL)
+                else ib.high[j] >= p.entry_trigger
+            )
+            if filled:
+                j0 = j
+                break
+        if j0 is None:
+            return None  # sub-bar data disagrees with the base bar; stay open
+
+        sl, tp = p.sl, p.tp
+        for j in range(j0, sub.stop):
+            if p.side == BULL:
+                sl_t = sl > 0 and ib.low[j] <= sl
+                tp_t = tp > 0 and ib.high[j] >= tp
+            else:
+                sl_t = sl > 0 and ib.high[j] >= sl
+                tp_t = tp > 0 and ib.low[j] <= tp
+            if j == j0 and tp_t and self.intrabar_policy == "conservative":
+                tp_t = False
+            if sl_t and (not tp_t or self.intrabar_policy == "conservative"):
+                return "sl"
+            if tp_t:
+                return "tp"
+        return None
 
     def _fill_pending(self, broker: Broker, i: int, open_: float,
                       high: float, low: float) -> None:

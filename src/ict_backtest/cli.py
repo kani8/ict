@@ -42,8 +42,10 @@ def _cmd_run(args: argparse.Namespace) -> int:
     config = SMCConfig.from_toml(args.config) if args.config else SMCConfig()
     cost = CostModel(spread_bps=args.spread_bps, commission_bps=args.commission_bps,
                      slippage_bps=args.slippage_bps)
+    intrabar = load_candles(args.intrabar_data, start=args.start, end=args.end) \
+        if args.intrabar_data else None
     backtester = Backtester(cost=cost, initial_equity=args.equity,
-                            intrabar_policy=args.intrabar_policy)
+                            intrabar_policy=args.intrabar_policy, intrabar=intrabar)
     strategy = SMCStrategy(candles, config)
     result = backtester.run(candles, strategy)
     metrics = compute_metrics(result)
@@ -95,6 +97,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--slippage-bps", type=float, default=1.0)
     p.add_argument("--intrabar-policy", choices=["conservative", "optimistic"],
                    default="conservative")
+    p.add_argument("--intrabar-data", default=None, metavar="PATH",
+                   help="finer-timeframe candles (e.g. 1m) used to resolve "
+                        "ambiguous bars by observed touch order")
     p.add_argument("--validate", type=int, default=0, metavar="N_SIMS",
                    help="run the random-entry null test with N simulations")
     p.add_argument("--report", default=None, help="write the markdown report here")

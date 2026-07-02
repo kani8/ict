@@ -5,10 +5,12 @@ Two nulls with different strengths:
 * ``MatchedRandomStrategy`` (the primary control) replays the audited
   strategy's *own realized trades* — same side, same stop/target distances
   in fractional terms, same risk-based sizing — at random times drawn from
-  the same eligible (killzone) universe.  Holding period and exposure then
-  emerge from the same exit geometry rather than being crudely averaged,
-  so the only thing destroyed is the *timing signal*.  If the strategy
-  cannot beat this, its entries carry no information beyond their shape.
+  the same eligible (killzone) universe.  Entry timing is randomized while
+  side and approximate fractional risk geometry are retained; execution
+  differs (market entries instead of the original limit fills), so realized
+  exposure and holding may differ from the strategy's — report the
+  diagnostics alongside the p-value.  Mean per-trade R is the more robust
+  comparison statistic across that gap.
 * ``RandomStrategy`` is a simpler drift control: random entries, fixed
   holding, notional-normalized size.  It answers "does anything at this
   frequency and these hours make money here?" but is NOT exposure- or

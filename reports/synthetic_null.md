@@ -22,7 +22,8 @@
 ## Statistical validity
 
 - Mean trade R: **0.52**, 95% block-bootstrap CI **[-0.34, 1.30]** (block length 2, preserves trade clustering) — **cannot reject zero edge**.
-- Matched-trade null (200 sims: the strategy's own trades — side, stop/target geometry, risk sizing — replayed at random eligible times): null mean return -1.39% ± 6.20%, strategy 9.27%, p = 0.050 (significant at 5%).
+- Trade-template null (200 sims: entry timing randomized; side, fractional stop/target geometry, risk sizing, and trade count retained; execution type and realized exposure may differ — see diagnostics): null mean return -1.39% ± 6.20%, strategy 9.27%, p = 0.050 (significant at 5%).
+- Same null, mean trade R statistic (risk-normalized, robust to the exposure mismatch): p = 0.085 (**not significant at 5%**).
 - Null matching diagnostics: trades 14 vs 14.0 (null mean); exposure 0.29% vs 0.30%; mean holding 7.2 vs 7.5 bars.
 
 ## Last trades

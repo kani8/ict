@@ -69,7 +69,37 @@ not and cannot change this verdict:
 3. OB fallback could select an already mitigated/invalidated block →
    lifecycle-filtered in `SMCStrategy._find_poi`; resting orders now cancel
    when their POI dies.
-4. Entry-bar ambiguity needs 1m-data resolution → open; see README roadmap.
+4. Entry-bar ambiguity needs 1m-data resolution → sub-bar resolution added
+   to the engine (`Backtester(intrabar=...)` / `--intrabar-data`).
+
+## Addendum (2026-07-01): regression diagnostic at cf8706a
+
+The audit remediations (notably OB lifecycle filtering) changed the entry
+set — **current HEAD is a revised strategy**, not the audited one. The
+auditor's re-run on the same burned BTC sample, recorded here strictly as a
+software-regression diagnostic:
+
+| Metric (cf8706a, conservative) | Value |
+|---|---|
+| Trades | 123 (was 174) |
+| After-cost return | −18.10% |
+| Profit factor | 0.81 |
+| Mean R | −0.28, 95% block-bootstrap CI [−0.64, 0.10] |
+| Matched-null p (500 sims) | 0.251 |
+| Zero-cost return | +5.78% |
+| Optimistic after-cost return | +21.40% |
+
+Null-matching diagnostics from that run (why the matched-null label needs
+care): strategy exposure 0.67% vs null mean 1.43%; mean holding 6.7 vs 14.2
+bars; trades 123 vs 123. The null preserves trade count, side, and fractional
+risk geometry but executes at market on randomized timing, so realized
+exposure/holding differ — hence the mean-R second statistic added after this
+re-audit.
+
+**This addendum is not validation.** The burned sample cannot validate the
+revision; the zero-cost regression being positive but inconclusive changes
+nothing about the deployment rejection. The revised strategy gets exactly one
+frozen test on untouched data (see below).
 
 ## Decision rule going forward
 

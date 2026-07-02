@@ -8,10 +8,15 @@ A profitable backtest is not evidence of edge by itself.  Checks provided:
   the serial dependence between neighboring trades.  Prefer this one.
 * ``matched_baseline_test`` — the primary null: the strategy's own trades
   (side, stop/target geometry, risk sizing) replayed at random times in
-  the same eligible-time universe.  Only the entry *timing* is destroyed,
-  so beating it means the timing signal itself carries information.
-  Matching diagnostics (trade count, exposure, holding) are reported so
-  the quality of the match is visible, not assumed.
+  the same eligible-time universe.  Precise estimand: the probability
+  that randomly *timed* replays of the same trade templates — executed as
+  market entries, so execution type and realized exposure/holding may
+  differ from the original limit fills — do at least as well as the
+  strategy.  It is a randomized trade-template test, not a strict
+  exposure-matched control; the matching diagnostics quantify the gap so
+  the p-value can be read accordingly.  Mean per-trade R is reported as a
+  second test statistic because it is risk-normalized and much less
+  sensitive to the exposure mismatch than total return.
 * ``random_baseline_test`` — a simpler drift-only control (random entries,
   fixed median holding, notional sizing).  NOT exposure/risk matched;
   treat its p-value as descriptive.
@@ -84,10 +89,12 @@ class BaselineTest:
     strategy_total_return: float
     baseline_mean_return: float
     baseline_std_return: float
-    p_value: float          # P(random >= strategy) under the null
+    p_value: float          # P(null total return >= strategy's)
     n_sims: int
     kind: str = "drift"     # "matched" (trade-template null) or "drift"
     diagnostics: dict = field(default_factory=dict)
+    p_value_mean_r: float = float("nan")  # P(null mean trade R >= strategy's);
+                                          # risk-normalized, exposure-robust
 
     @property
     def significant_5pct(self) -> bool:
@@ -114,18 +121,25 @@ def matched_baseline_test(
     risk_pct: float = 1.0,
     max_leverage: float = 5.0,
 ) -> BaselineTest:
-    """Primary null: the strategy's own trades at random times.
+    """Randomized trade-template null (see module docstring for the estimand).
 
-    Side mix, stop/target geometry, risk sizing, and eligible-time universe
-    are inherited from the real trades; holding period and exposure emerge
-    from the same exit rules.  Diagnostics quantify how close the match
-    came so the p-value can be read with open eyes.
+    Side mix, stop/target geometry, risk sizing, trade count, and
+    eligible-time universe are inherited from the real trades; entries are
+    market orders at the randomized times, so execution type and realized
+    exposure/holding may differ — the diagnostics quantify by how much.
+    Two p-values are computed: total return (exposure-sensitive) and mean
+    per-trade R (risk-normalized, exposure-robust).
     """
     trades = result.trades
     if not trades:
         return BaselineTest(0.0, 0.0, 0.0, 1.0, 0, kind="matched")
 
+    def _mean_r(ts) -> float:
+        rs = [t.r_multiple for t in ts if not np.isnan(t.r_multiple)]
+        return float(np.mean(rs)) if rs else 0.0
+
     returns = np.empty(n_sims)
+    mean_rs = np.empty(n_sims)
     diag_trades = np.empty(n_sims)
     diag_exposure = np.empty(n_sims)
     diag_holding = np.empty(n_sims)
@@ -136,11 +150,13 @@ def matched_baseline_test(
         )
         res = backtester.run(candles, null)
         returns[k] = res.total_return
+        mean_rs[k] = _mean_r(res.trades)
         diag_trades[k], diag_exposure[k], diag_holding[k] = _exposure_stats(res)
 
     strat_n, strat_exp, strat_hold = _exposure_stats(result)
     strat = result.total_return
     p = float((1 + np.sum(returns >= strat)) / (n_sims + 1))
+    p_mean_r = float((1 + np.sum(mean_rs >= _mean_r(trades))) / (n_sims + 1))
     return BaselineTest(
         strategy_total_return=strat,
         baseline_mean_return=float(returns.mean()),
@@ -148,6 +164,7 @@ def matched_baseline_test(
         p_value=p,
         n_sims=n_sims,
         kind="matched",
+        p_value_mean_r=p_mean_r,
         diagnostics={
             "strategy_trades": strat_n,
             "null_mean_trades": float(diag_trades.mean()),

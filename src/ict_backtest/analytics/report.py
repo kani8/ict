@@ -60,8 +60,9 @@ def render_report(
     if baseline is not None and baseline.n_sims > 0:
         sig = "significant at 5%" if baseline.significant_5pct else "**not significant at 5%**"
         if baseline.kind == "matched":
-            null_desc = (f"Matched-trade null ({baseline.n_sims} sims: the strategy's own trades — "
-                         "side, stop/target geometry, risk sizing — replayed at random eligible times)")
+            null_desc = (f"Trade-template null ({baseline.n_sims} sims: entry timing randomized; "
+                         "side, fractional stop/target geometry, risk sizing, and trade count "
+                         "retained; execution type and realized exposure may differ — see diagnostics)")
         else:
             null_desc = (f"Drift-control null ({baseline.n_sims} sims, random entries at matched "
                          "frequency; NOT exposure/risk matched — descriptive only)")
@@ -70,6 +71,12 @@ def render_report(
             f"null mean return {_fmt(baseline.baseline_mean_return * 100)}% ± {_fmt(baseline.baseline_std_return * 100)}%, "
             f"strategy {_fmt(baseline.strategy_total_return * 100)}%, p = {_fmt(baseline.p_value, 3)} ({sig}).",
         ]
+        if not math.isnan(baseline.p_value_mean_r):
+            sig_r = "significant at 5%" if baseline.p_value_mean_r < 0.05 else "**not significant at 5%**"
+            lines += [
+                f"- Same null, mean trade R statistic (risk-normalized, robust to the exposure "
+                f"mismatch): p = {_fmt(baseline.p_value_mean_r, 3)} ({sig_r}).",
+            ]
         d = baseline.diagnostics
         if d:
             lines += [

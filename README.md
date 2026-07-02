@@ -7,22 +7,26 @@ framework, paired with a backtesting harness built to answer one question honest
 
 Every design decision serves that goal. The detectors are faithful to the ICT
 definitions (order blocks, fair value gaps, liquidity sweeps, market structure,
-OTE, killzones), and the harness is engineered so that a positive result cannot
-be an artifact of lookahead bias, intrabar wishful thinking, or ignored costs.
+OTE, killzones), and the harness is engineered to reduce the principal known
+sources of backtest deception: lookahead bias, intrabar wishful thinking, and
+ignored costs. No finite harness rules out every artifact; this one makes the
+known ones testable.
 
 ## ⚠️ Real-market verdict (2026-07-01): FAILED VALIDATION
 
 An independent audit ran the predeclared default configuration on Binance
 BTCUSDT 15m, 2023-01-01 → 2026-07-01: **−34.5% (conservative fills), −5.6%
 even at zero costs, losses in every calendar slice, p = 1.0 vs the random
-control.** No gross edge exists in this composition on this market/period.
-Full numbers, robustness table, and the decision rule going forward:
+control.** No gross edge was detected at the audited commit (`127e2c7`) on
+this market/period. Full numbers, robustness table, and the decision rule:
 [`reports/VERDICT_btc15m_2023-2026.md`](reports/VERDICT_btc15m_2023-2026.md).
 
-**That BTC sample is burned** — do not tune parameters against it. The audit
-also flagged three harness improvements (matched null, block bootstrap, OB
-lifecycle filtering), all fixed since; none can change the verdict, since the
-strategy loses before costs.
+**That BTC sample is burned** — do not tune parameters against it. The
+audit-prompted fixes (matched null, block bootstrap, OB lifecycle filtering,
+1m intrabar resolution) changed the entry set, so current HEAD is a *revised*
+strategy; its regression numbers on the burned sample (see the verdict
+addendum) are software diagnostics, not validation. The revision awaits a
+frozen one-shot test on untouched data.
 
 ---
 
@@ -108,12 +112,15 @@ Every knob lives in [`configs/default.toml`](configs/default.toml).
   slippage on stop/market fills.
 - **Null-model statistics.** The primary control (`matched_baseline_test`)
   replays the strategy's *own trades* — side, stop/target geometry, risk
-  sizing — at random times in the same killzone universe, so only the entry
-  timing is destroyed; matching diagnostics (trade count, exposure, holding)
-  are printed next to the p-value rather than assumed. A simpler drift-only
-  random-entry control remains available and is labeled descriptive. Mean
-  trade R gets a **block bootstrap** CI (preserves regime clustering, unlike
-  the IID bootstrap).
+  sizing, trade count — at random times in the same killzone universe: entry
+  timing is randomized while the approximate fractional risk geometry is
+  retained. Execution type (market vs. the original limit fills) and realized
+  exposure may differ, so matching diagnostics are printed next to the
+  p-value, and mean per-trade R (risk-normalized, exposure-robust) is
+  reported as a second test statistic. A simpler drift-only random-entry
+  control remains available and is labeled descriptive. Mean trade R gets a
+  **block bootstrap** CI (preserves regime clustering, unlike the IID
+  bootstrap).
 
 ## Quickstart
 
@@ -154,7 +161,7 @@ entries stricter and rarer):
 
 | Regime | Result | Interpretation |
 |---|---|---|
-| [Random walk](reports/synthetic_null.md) (no structure by construction) | 14 trades, +9.3%, p = 0.050, R CI [−0.34, 1.30] | A borderline p on a lucky draw with a **CI straddling zero** — read jointly, correctly rejected. One metric alone would have fooled you; that is why the report prints several. |
+| [Random walk](reports/synthetic_null.md) (no structure by construction) | 14 trades, +9.3%, p(return) = 0.050, p(mean R) = 0.085, R CI [−0.34, 1.30] | A borderline p on a lucky draw: the exposure-robust mean-R statistic weakens it and the **CI straddles zero** — read jointly, correctly rejected. One metric alone would have fooled you; that is why the report prints several. |
 | [Persistent trends](reports/synthetic_trending.md) | 4 trades, +2.0%, p = 0.23 | Sample far too small to conclude anything — and the report says so instead of extrapolating. |
 
 The real-market answer came from real data (see the verdict above): 174
@@ -167,23 +174,28 @@ costs.
   whatever the total return says.
 - `p_value` ≥ 0.05 vs the random baseline → performance is explainable by
   drift + luck at that trade frequency.
-- Re-run with `--intrabar-policy optimistic` to bound the intrabar ambiguity:
-  the truth lies between the two policies; a strategy that only works under
-  the optimistic one is an artifact.
+- Prefer `--intrabar-data <1m file>` to resolve ambiguous bars by observed
+  touch order. Without it, re-run with `--intrabar-policy optimistic` to
+  bound the ambiguity: the truth lies between the two policies; a strategy
+  that only works under the optimistic one is an artifact.
 
 ## Roadmap (post-verdict decision rule)
 
 The BTC 2023–2026 sample is observed and off-limits for tuning. The agreed
 sequence, in order:
 
-1. ~~Matched, risk-geometry-preserving null with diagnostics~~ — done.
+1. ~~Matched, risk-geometry-preserving null with diagnostics~~ — done
+   (estimand qualified; mean-R second statistic added after re-audit).
 2. ~~Block bootstrap for dependence-aware CIs~~ — done.
 3. ~~OB lifecycle filtering in POI selection + stale-order cancellation~~ — done.
-4. **1m-data intrabar resolution** at the `_resolve_exits` seam, to collapse
-   the conservative/optimistic spread (12 ambiguous trades flipped the BTC
-   result by ~$36k of PnL).
+4. ~~1m-data intrabar resolution~~ — done: pass `--intrabar-data 1m.parquet`
+   (or `Backtester(intrabar=...)`) and ambiguous bars resolve by observed
+   sub-bar touch order; the policy only breaks ties within a single sub-bar
+   or where coverage is missing. This collapses the conservative/optimistic
+   spread (12 ambiguous trades flipped the BTC result by ~$36k of PnL).
 5. **Freeze the specification**, then one confirmatory run on untouched
-   instruments/periods (e.g. ETHUSDT, FX majors, pre-2023 BTC). Ablations
+   instruments/periods (e.g. ETHUSDT, FX majors, pre-2023 BTC), fetched at
+   both the trading timeframe and 1m for fill resolution. Ablations
    (killzones off, OTE off, sweep-gate off) only as post-hoc descriptive
    diagnostics, labeled as such.
 6. If still negative or indistinguishable from zero: **stop.** That is a
@@ -197,8 +209,9 @@ sequence, in order:
   annualization uses 24/7 by default (`analytics/metrics.py`).
 - **Walk-forward / parameter sweeps**: `SMCConfig` is a flat dataclass —
   sweep fields and split date ranges via `load_candles(start=, end=)`.
-- **Lower-timeframe fill resolution**: `Backtester._resolve_exits` is the
-  single seam where 1m-data-driven intrabar resolution would plug in.
+- **Lower-timeframe fill resolution**: built in — pass finer candles via
+  `Backtester(intrabar=...)`; `_resolve_exits`/`_entry_bar_touch_ib` walk the
+  sub-bars, falling back to the declared policy where coverage is missing.
 - Every extension inherits the no-lookahead guarantee for free if artifacts
   carry honest `confirm_index` values — and `test_no_lookahead.py` will catch
   you if they don't.

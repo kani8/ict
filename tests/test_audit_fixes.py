@@ -119,6 +119,7 @@ def test_matched_baseline_test_diagnostics():
     candles, bt, result = _run_smc()
     test = matched_baseline_test(candles, result, bt, n_sims=10)
     assert 0.0 < test.p_value <= 1.0
+    assert 0.0 < test.p_value_mean_r <= 1.0   # risk-normalized second statistic
     assert test.kind == "matched"
     d = test.diagnostics
     assert d["strategy_trades"] == len(result.trades)

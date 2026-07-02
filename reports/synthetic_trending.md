@@ -18,7 +18,8 @@
 | Max drawdown | -3.38% |
 | Exposure | 0.1% |
 | Avg / median holding (bars) | 8.0 / 7.5 |
-- Matched-trade null (200 sims: the strategy's own trades — side, stop/target geometry, risk sizing — replayed at random eligible times): null mean return 0.68% ± 2.95%, strategy 1.95%, p = 0.229 (**not significant at 5%**).
+- Trade-template null (200 sims: entry timing randomized; side, fractional stop/target geometry, risk sizing, and trade count retained; execution type and realized exposure may differ — see diagnostics): null mean return 0.68% ± 2.95%, strategy 1.95%, p = 0.229 (**not significant at 5%**).
+- Same null, mean trade R statistic (risk-normalized, robust to the exposure mismatch): p = 0.229 (**not significant at 5%**).
 - Null matching diagnostics: trades 4 vs 4.0 (null mean); exposure 0.09% vs 0.07%; mean holding 8.0 vs 6.5 bars.
 
 ## Last trades
