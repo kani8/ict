@@ -19,6 +19,15 @@ class SMCConfig:
 
     # -- setup sequencing ------------------------------------------------------
     use_htf_bias: bool = True      # only trade in the HTF structure direction
+    # bias-dominance gates: HTF judgment as the majority contributor, with the
+    # sweep/MSS/POI mechanics acting only as triggers (all default-off)
+    bias_htf2_multiplier: int = 0  # second, higher bias TF that must also agree
+                                   # (96 x 15m = daily); 0 = off
+    require_htf_discount: bool = False  # longs only below the HTF dealing-range
+                                        # equilibrium, shorts only above it
+    require_draw: bool = False     # an untaken HTF liquidity pool must exist
+                                   # beyond price in the trade direction (the
+                                   # "draw on liquidity" the market reaches for)
     sweep_to_mss_bars: int = 30    # structure break must follow the sweep within N bars
     order_expiry_bars: int = 30    # limit order lifetime after placement
     require_ote: bool = True       # entry must sit in the 62-79% retracement band
@@ -45,6 +54,8 @@ class SMCConfig:
     news_csv: str = ""                 # calendar CSV; empty = built-in NFP+FOMC
     news_before_min: int = 30
     news_after_min: int = 60
+    news_day_blackout: bool = False    # exclude the entire ET day of any event
+                                       # ("only trade days with no news")
 
     @classmethod
     def from_toml(cls, path: str | Path) -> "SMCConfig":

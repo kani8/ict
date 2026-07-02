@@ -13,8 +13,12 @@ min_gap_atr = 0.25
 atr_period = 14
 max_leg_bars = 100
 
-# setup sequencing
+# setup sequencing — bias dominance: the HTF judgment layer is the majority
+# contributor; sweep/MSS/POI mechanics are triggers only (V2.1 amendment)
 use_htf_bias = true
+bias_htf2_multiplier = 96     # daily structure must agree with the 4h bias
+require_htf_discount = true   # longs in HTF discount, shorts in HTF premium
+require_draw = true           # an untaken HTF pool must exist as the magnet
 sweep_to_mss_bars = 30
 order_expiry_bars = 30
 require_ote = true
@@ -39,3 +43,4 @@ killzones = ["london", "new_york", "silver_bullet"]
 avoid_news = true
 news_before_min = 30
 news_after_min = 60
+news_day_blackout = true      # strict reading: skip the whole ET news day

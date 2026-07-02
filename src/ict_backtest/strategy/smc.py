@@ -59,7 +59,14 @@ class SMCStrategy:
         self.fvgs = detect_fvgs(candles, cfg.min_gap_atr, cfg.atr_period)
         self.pools = detect_liquidity_pools(candles, swings, cfg.eq_tol_atr, cfg.atr_period)
 
-        self.bias = self._compute_bias() if cfg.use_htf_bias else np.zeros(len(candles), dtype=int)
+        if cfg.use_htf_bias:
+            self.bias, self.htf_eq, self.htf_pools = self._htf_context(cfg.htf_multiplier)
+        else:
+            self.bias = np.zeros(len(candles), dtype=int)
+            self.htf_eq = np.full(len(candles), np.nan)
+            self.htf_pools = []
+        self.bias2 = (self._htf_context(cfg.bias_htf2_multiplier)[0]
+                      if cfg.bias_htf2_multiplier else None)
 
         if cfg.use_killzones:
             table = ET_BY_NAME if cfg.killzone_tz != "UTC" else BY_NAME
@@ -69,13 +76,15 @@ class SMCStrategy:
             self.kz_mask = np.ones(len(candles), dtype=bool)
 
         if cfg.avoid_news:
-            from ..data.news import blackout_mask, default_events, load_news_csv
+            from ..data.news import blackout_mask, default_events, load_news_csv, news_day_mask
 
             events = (load_news_csv(cfg.news_csv) if cfg.news_csv
                       else default_events(int(candles.ts[0]),
                                           int(candles.ts[-1]) + candles.timeframe_s))
             self.news_mask = blackout_mask(candles.ts, events,
                                            cfg.news_before_min, cfg.news_after_min)
+            if cfg.news_day_blackout:
+                self.news_mask |= news_day_mask(candles.ts, events)
         else:
             self.news_mask = np.zeros(len(candles), dtype=bool)
 
@@ -95,25 +104,74 @@ class SMCStrategy:
 
     # ------------------------------------------------------------------
 
-    def _compute_bias(self) -> np.ndarray:
-        """Direction of the last completed HTF structure event, per base bar."""
-        htf, last_base = resample(self.candles, self.cfg.htf_multiplier)
+    def _htf_context(self, multiplier: int) -> tuple[np.ndarray, np.ndarray, list]:
+        """Higher-timeframe judgment layer, per base bar and lookahead-safe.
+
+        Returns ``(bias, equilibrium, pools)``:
+
+        * bias — direction of the last completed HTF structure event;
+        * equilibrium — midpoint of the HTF dealing range (most recent
+          confirmed HTF swing high and low), for premium/discount gating;
+        * pools — HTF liquidity pools as ``(side, level, confirm_base,
+          taken_base)`` tuples, confirm/taken mapped through HTF-bar closes
+          so nothing is visible before it is knowable on the base series.
+
+        Everything an HTF bar reveals affects base bars strictly *after*
+        that HTF bar's final base bar.
+        """
+        htf, last_base = resample(self.candles, multiplier)
         htf_swings = detect_swings(htf, self.cfg.swing_k)
         htf_events = detect_structure(htf, htf_swings)
-        bias = np.zeros(len(self.candles), dtype=int)
-        current = 0
-        ei = 0
+        htf_pools = detect_liquidity_pools(htf, htf_swings, self.cfg.eq_tol_atr,
+                                           self.cfg.atr_period)
+        n = len(self.candles)
+        bias = np.zeros(n, dtype=int)
+        eq = np.full(n, np.nan)
+
+        cur_dir = 0
+        cur_eq = np.nan
+        ref_hi: float | None = None
+        ref_lo: float | None = None
+        by_confirm = sorted(htf_swings, key=lambda s: s.confirm_index)
+        si = ei = 0
         for k in range(len(htf)):
             start = int(last_base[k - 1]) + 1 if k > 0 else 0
-            bias[start : int(last_base[k]) + 1] = current
-            # events on HTF bar k become known at that bar's close -> affect
-            # base bars strictly after last_base[k]
+            bias[start : int(last_base[k]) + 1] = cur_dir
+            eq[start : int(last_base[k]) + 1] = cur_eq
+            while si < len(by_confirm) and by_confirm[si].confirm_index <= k:
+                s = by_confirm[si]
+                if s.kind == BULL:
+                    ref_hi = s.price
+                else:
+                    ref_lo = s.price
+                si += 1
             while ei < len(htf_events) and htf_events[ei].index <= k:
-                current = htf_events[ei].direction
+                cur_dir = htf_events[ei].direction
                 ei += 1
+            if ref_hi is not None and ref_lo is not None:
+                cur_eq = 0.5 * (ref_hi + ref_lo)
         if len(htf):
-            bias[int(last_base[-1]) + 1 :] = current
-        return bias
+            bias[int(last_base[-1]) + 1 :] = cur_dir
+            eq[int(last_base[-1]) + 1 :] = cur_eq
+
+        pools = [
+            (p.side, p.level, int(last_base[p.confirm_index]),
+             int(last_base[p.taken_index]) if p.taken_index != -1 else -1)
+            for p in htf_pools
+        ]
+        return bias, eq, pools
+
+    def _draw_exists(self, direction: int, i: int) -> bool:
+        """Is there an untaken HTF pool beyond price to draw toward?"""
+        c = float(self.candles.close[i])
+        for side, level, confirm_base, taken_base in self.htf_pools:
+            if side != direction or confirm_base > i:
+                continue
+            if taken_base != -1 and taken_base <= i:
+                continue
+            if (direction == BULL and level > c) or (direction == BEAR and level < c):
+                return True
+        return False
 
     # ------------------------------------------------------------------
 
@@ -155,7 +213,22 @@ class SMCStrategy:
             matches = [a for a in self._armed if a.direction == ev.direction]
             if not matches:
                 continue
+            # bias-dominance gates: the HTF judgment layer must fully agree
+            # before any trigger is even considered
             if cfg.use_htf_bias and self.bias[i] != ev.direction:
+                continue
+            if self.bias2 is not None and self.bias2[i] != ev.direction:
+                continue
+            if cfg.require_htf_discount:
+                eq = self.htf_eq[i]
+                c = float(self.candles.close[i])
+                if np.isnan(eq):
+                    continue
+                if ev.direction == BULL and c >= eq:
+                    continue
+                if ev.direction == BEAR and c <= eq:
+                    continue
+            if cfg.require_draw and not self._draw_exists(ev.direction, i):
                 continue
             if not self.kz_mask[i] or self.news_mask[i]:
                 continue

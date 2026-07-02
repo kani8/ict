@@ -5,6 +5,29 @@
   one-shot holdout runs.** V1 is concluded (`reports/FINAL_VERDICT.md`)
   and is not being rescued; V2 is a distinct hypothesis.
 
+## Amendment V2.1 (2026-07-02, declared before any holdout contact)
+
+No holdout data has been fetched or inspected; this amendment supersedes
+the original spec cleanly. Rationale: ICT frames the HTF narrative as the
+*majority contributor* to trade probability, with the entry mechanics as
+triggers only. The original V2 encoded bias as a single 4h veto, which
+under-weights that judgment layer. V2.1 makes bias dominance explicit:
+
+- `bias_htf2_multiplier = 96` — the **daily** structure direction must
+  agree with the 4h bias (two-timeframe top-down agreement).
+- `require_htf_discount = true` — longs only below the HTF dealing-range
+  equilibrium (discount), shorts only above it (premium).
+- `require_draw = true` — an untaken HTF liquidity pool must exist beyond
+  price in the trade direction: the draw on liquidity the market is
+  reaching for.
+- `news_day_blackout = true` — the strict "only trade days with no news"
+  reading: the entire ET calendar day of any NFP/FOMC event is excluded,
+  not just a window around it.
+
+All four gates apply at signal time before any trigger is considered.
+Everything else in the original specification, the holdouts, and the
+decision rule below is unchanged.
+
 ## Hypothesis
 
 Adding the remaining major ICT teachings — inversion fair value gaps as

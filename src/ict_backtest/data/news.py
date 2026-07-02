@@ -101,3 +101,19 @@ def blackout_mask(ts: np.ndarray, events: list[int],
     for e in events:
         mask |= (ts >= e - before_min * 60) & (ts < e + after_min * 60)
     return mask
+
+
+def news_day_mask(ts: np.ndarray, events: list[int]) -> np.ndarray:
+    """True for every bar on the ET calendar day of any event.
+
+    Implements the strict reading of "only trade days with no news".
+    """
+    import pandas as pd
+
+    if not events:
+        return np.zeros(len(ts), dtype=bool)
+    event_days = {
+        dt.datetime.fromtimestamp(e, tz=ET).date() for e in events
+    }
+    bar_days = pd.to_datetime(ts, unit="s", utc=True).tz_convert(ET).date
+    return np.array([d in event_days for d in bar_days], dtype=bool)

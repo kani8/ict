@@ -222,6 +222,21 @@ config [`configs/v2_faithful.toml`](configs/v2_faithful.toml)):
 - **Breakeven management** — stop moves to entry at +1R; R accounting
   stays anchored to the initial stop.
 
+**Amendment V2.1** (declared before any holdout contact) makes the HTF
+judgment layer the *majority contributor*, per ICT's own framing — the
+mechanics above are triggers only, subordinate to four bias-dominance
+gates that must all agree at signal time:
+
+- **Dual-timeframe agreement** — daily structure direction must confirm
+  the 4h bias (`bias_htf2_multiplier = 96`).
+- **HTF premium/discount** — longs only below the HTF dealing-range
+  equilibrium, shorts only above (`require_htf_discount`).
+- **Draw on liquidity** — an untaken HTF pool must exist beyond price in
+  the trade direction as the magnet the market reaches for (`require_draw`).
+- **No-news days** — the entire ET calendar day of any NFP/FOMC event is
+  excluded, the strict reading of "only trade days with no news"
+  (`news_day_blackout`).
+
 Holdouts (untouched): SOLUSDT 2023–2026 and BTCUSDT 2019–2022, 15m + 1m,
 run once each at the frozen commit. Decision rule is declared in the
 preregistration; a fail closes the mechanical-ICT program here.
