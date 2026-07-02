@@ -201,6 +201,31 @@ sequence, in order:
 6. If still negative or indistinguishable from zero: **stop.** That is a
    finished research result, not a failure of the tooling.
 
+## Testing on index futures / equities (ES, SPY, other high-liquidity markets)
+
+ICT's own teaching centers on ES/NQ futures and FX, so index markets are
+arguably the *more* faithful venue — and the harness is instrument-agnostic.
+What to know:
+
+- **Data**: the bundled fetcher is Binance-only. For ES/SPY bring your own
+  OHLCV CSV/Parquet (broker export, Databento, FirstRate, Polygon, …); the
+  loader maps common column names and infers the timeframe. Supply both the
+  trading timeframe and 1m files (`--intrabar-data`) — incomplete 1m buckets
+  automatically fall back to the conservative policy.
+- **Costs**: recalibrate `--spread-bps/--commission-bps` per instrument. ES
+  is far cheaper than crypto (one 0.25 tick ≈ 0.4 bps at 6000); SPY tighter
+  still. Cheap costs cut both ways: they help a marginal edge but remove the
+  "costs ate it" excuse.
+- **Sessions**: killzones are fixed UTC windows without DST handling; for
+  NY-centric instruments check the offsets for your test period (or trade
+  `use_killzones = false` and treat time-of-day as an ablation).
+- **Annualization**: pass `--bars-per-year` for session-bound data (RTH 15m
+  US equities ≈ 26 x 252 = 6552), otherwise Sharpe/CAGR annualize against
+  hours the market never traded. Overnight/weekend gaps are already handled
+  pessimistically by the engine (exits fill at the gapped open).
+- **Preregistration still applies**: an ES/SPY run counts as a holdout only
+  if the spec is frozen before the data is touched, and it is run once.
+
 ## Extending (designed-for iteration points)
 
 - **New setups**: add a detector returning confirm-indexed artifacts, compose

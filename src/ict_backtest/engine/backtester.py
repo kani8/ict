@@ -71,6 +71,7 @@ class Position:
     entry_type: str = "market"     # order type that opened it
     entry_trigger: float = 0.0     # raw limit/stop trigger (pre-cost), for
                                    # locating the fill moment in sub-bar data
+    entry_raw: float = 0.0         # raw fill basis before cost adjustment
 
 
 @dataclass(slots=True)
@@ -166,7 +167,8 @@ class Broker:
         self.position = Position(side=order.side, qty=order.qty, entry_price=fill,
                                  entry_index=i, sl=order.sl, tp=order.tp, tag=order.tag,
                                  entry_commission=commission,
-                                 entry_type=order.type, entry_trigger=order.price)
+                                 entry_type=order.type, entry_trigger=order.price,
+                                 entry_raw=price)
 
 
 @dataclass
@@ -203,24 +205,48 @@ class Backtester:
         self.intrabar = intrabar
         self._ib_start: np.ndarray | None = None  # per base bar, sub-bar range
         self._ib_end: np.ndarray | None = None
+        self._ib_complete: np.ndarray | None = None
 
     def _map_intrabar(self, candles: Candles) -> None:
-        """Bucket sub-bars into base bars by timestamp: [ts[i], ts[i] + tf)."""
+        """Bucket sub-bars into base bars by timestamp: [ts[i], ts[i] + tf).
+
+        A bucket is usable only when it is *complete*: exactly
+        ``base_tf / sub_tf`` sub-bars at exactly the expected timestamps.
+        A partial bucket can silently miss the sub-bar in which a level was
+        touched, turning "observed touch order" into wishful thinking — so
+        any missing first/middle/last sub-bar disables the bucket and the
+        declared policy applies instead.
+        """
         if self.intrabar is None:
-            self._ib_start = self._ib_end = None
+            self._ib_start = self._ib_end = self._ib_complete = None
             return
         if self.intrabar.timeframe_s >= candles.timeframe_s:
             raise ValueError("intrabar data must be a finer timeframe than the base candles")
+        ratio, rem = divmod(candles.timeframe_s, self.intrabar.timeframe_s)
+        if rem:
+            raise ValueError("base timeframe must be an exact multiple of the intrabar timeframe")
         ib_ts = self.intrabar.ts
         self._ib_start = np.searchsorted(ib_ts, candles.ts, side="left")
         self._ib_end = np.searchsorted(ib_ts, candles.ts + candles.timeframe_s, side="left")
 
+        counts = self._ib_end - self._ib_start
+        complete = counts == ratio
+        has_any = counts > 0
+        first_idx = np.clip(self._ib_start, 0, max(len(ib_ts) - 1, 0))
+        complete &= has_any & (ib_ts[first_idx] == candles.ts)
+        if ratio > 1 and len(ib_ts) > 1:
+            # no irregular spacing inside the bucket
+            irregular = np.concatenate(([0], np.cumsum(np.diff(ib_ts) != self.intrabar.timeframe_s)))
+            s = np.clip(self._ib_start, 0, len(ib_ts) - 1)
+            e = np.clip(self._ib_end - 1, 0, len(ib_ts) - 1)
+            complete &= irregular[e] - irregular[s] == 0
+        self._ib_complete = complete
+
     def _sub_bars(self, i: int) -> range | None:
-        """Sub-bar index range for base bar i, or None if uncovered."""
-        if self._ib_start is None:
+        """Sub-bar index range for base bar i, or None unless fully covered."""
+        if self._ib_start is None or not self._ib_complete[i]:
             return None
-        s, e = int(self._ib_start[i]), int(self._ib_end[i])
-        return range(s, e) if e > s else None
+        return range(int(self._ib_start[i]), int(self._ib_end[i]))
 
     def run(self, candles: Candles, strategy: Strategy) -> BacktestResult:
         broker = Broker(candles, self.cost, self.initial_equity)
@@ -242,7 +268,8 @@ class Backtester:
             self._fill_pending(broker, i, o[i], h[i], l[i])
             # 4. a fill this bar may already be stopped/targeted this bar
             if broker.position is not None and broker.position.entry_index == i:
-                self._resolve_exits(broker, i, None, h[i], l[i], entry_bar=True)
+                if not self._exit_if_born_beyond_levels(broker, i):
+                    self._resolve_exits(broker, i, None, h[i], l[i], entry_bar=True)
             # 5. mark to market, then let the strategy act on the closed bar
             equity[i] = broker.equity
             strategy.on_bar(i, broker)
@@ -310,6 +337,28 @@ class Backtester:
             broker._exit(i, sl, aggressive=True, reason="sl")
         elif tp_hit:
             broker._exit(i, tp, aggressive=False, reason="tp")
+
+    def _exit_if_born_beyond_levels(self, broker: Broker, i: int) -> bool:
+        """Close a position whose fill landed at or beyond its own stop/target.
+
+        A marketable entry can gap through its bracket (limit buy at 100
+        fills at a 90 open with the stop at 95).  The stop then triggers
+        immediately as a market exit at the fill basis — never at the stale
+        level, which would book phantom profit.  Costs apply as usual, so
+        the trade nets roughly the round-trip cost.
+        """
+        p = broker.position
+        assert p is not None
+        raw = p.entry_raw
+        beyond_sl = p.sl > 0 and (raw <= p.sl if p.side == BULL else raw >= p.sl)
+        beyond_tp = p.tp > 0 and (raw >= p.tp if p.side == BULL else raw <= p.tp)
+        if beyond_sl:
+            broker._exit(i, raw, aggressive=True, reason="sl")
+            return True
+        if beyond_tp:
+            broker._exit(i, raw, aggressive=False, reason="tp")
+            return True
+        return False
 
     def _first_touch_ib(self, side: int, sl: float, tp: float, sub: range) -> str | None:
         """Which level a sub-bar walk touches first; policy breaks same-sub-bar ties."""

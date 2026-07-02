@@ -101,6 +101,19 @@ revision; the zero-cost regression being positive but inconclusive changes
 nothing about the deployment rejection. The revised strategy gets exactly one
 frozen test on untouched data (see below).
 
+### Second re-audit (2ef571d): two execution defects, both fixed
+
+Found before the holdout was touched (holdout preserved): (1) partial
+intrabar coverage was treated as complete, letting a missing sub-bar
+suppress a same-bar stop; buckets now require every expected sub-bar
+timestamp or the conservative policy applies. (2) A marketable entry
+gapping through its own stop booked the exit at the stale stop level —
+phantom profit (a long limit at 100 filling at a 90 open with stop 95
+recorded +5 on a "stop loss"); such positions now exit immediately at the
+fill basis with full costs. Both reproduced, fixed, and regression-tested.
+Notably, the phantom-profit defect was *favorable* to the strategy and it
+still failed the BTC test — the historical verdict is unaffected.
+
 ## Decision rule going forward
 
 Repair-then-freeze: with the null and bootstrap fixed and (eventually)

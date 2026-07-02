@@ -48,7 +48,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
                             intrabar_policy=args.intrabar_policy, intrabar=intrabar)
     strategy = SMCStrategy(candles, config)
     result = backtester.run(candles, strategy)
-    metrics = compute_metrics(result)
+    metrics = compute_metrics(result, bars_per_year=args.bars_per_year)
 
     baseline = None
     if args.validate:
@@ -100,6 +100,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--intrabar-data", default=None, metavar="PATH",
                    help="finer-timeframe candles (e.g. 1m) used to resolve "
                         "ambiguous bars by observed touch order")
+    p.add_argument("--bars-per-year", type=float, default=None,
+                   help="annualization override for session-bound markets "
+                        "(e.g. 6552 for RTH 15m US equities); default assumes 24/7")
     p.add_argument("--validate", type=int, default=0, metavar="N_SIMS",
                    help="run the random-entry null test with N simulations")
     p.add_argument("--report", default=None, help="write the markdown report here")

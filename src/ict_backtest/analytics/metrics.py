@@ -34,11 +34,19 @@ class Metrics:
         return asdict(self)
 
 
-def compute_metrics(result: BacktestResult) -> Metrics:
+def compute_metrics(result: BacktestResult, bars_per_year: float | None = None) -> Metrics:
+    """Compute performance metrics.
+
+    ``bars_per_year`` defaults to wall-clock (24/7) bars, correct for crypto.
+    For session-bound markets pass the actual figure — e.g. RTH 15m US
+    equities: 26 bars/day x 252 days = 6552 — or Sharpe/Sortino/CAGR will be
+    annualized against hours the market never traded.
+    """
     trades = result.trades
     eq = result.equity_curve
     n_bars = len(eq)
-    bars_per_year = SECONDS_PER_YEAR / result.candles.timeframe_s
+    if bars_per_year is None:
+        bars_per_year = SECONDS_PER_YEAR / result.candles.timeframe_s
 
     rets = np.diff(eq) / eq[:-1] if n_bars > 1 else np.array([0.0])
     std = rets.std(ddof=1) if len(rets) > 1 else 0.0
