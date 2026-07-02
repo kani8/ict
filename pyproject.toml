@@ -1,0 +1,36 @@
+[project]
+name = "ict-backtest"
+version = "0.1.0"
+description = "Smart Money Concepts (ICT) strategy implementation with a rigorous, lookahead-safe backtesting harness"
+readme = "README.md"
+authors = [
+    { name = "Claude", email = "noreply@anthropic.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyarrow>=14.0",
+]
+
+[project.optional-dependencies]
+fetch = ["requests>=2.31"]
+plot = ["matplotlib>=3.8"]
+dev = ["pytest>=8.0", "pytest-cov>=4.1", "ruff>=0.4"]
+
+[project.scripts]
+ict-backtest = "ict_backtest.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.8.17,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+ignore = ["E741"]  # o/h/l/c is the natural vocabulary for OHLC code
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

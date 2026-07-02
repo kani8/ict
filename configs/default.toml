@@ -1,0 +1,30 @@
+# Default SMC strategy configuration.
+# All keys map 1:1 to ict_backtest.strategy.SMCConfig fields.
+
+[strategy]
+# detectors
+swing_k = 3            # fractal half-width (confirmation lag, bars)
+htf_multiplier = 16    # 16 x 15m = 4h bias timeframe
+eq_tol_atr = 0.25      # equal-high/low merge tolerance (ATRs)
+min_gap_atr = 0.25     # FVG displacement filter (ATRs)
+atr_period = 14
+max_leg_bars = 100
+
+# setup sequencing
+use_htf_bias = true
+sweep_to_mss_bars = 30
+order_expiry_bars = 30
+require_ote = true
+require_discount = true
+poi_priority = ["fvg", "ob"]
+
+# risk / exits
+stop_buffer_atr = 0.25
+min_rr = 1.5
+default_rr = 2.0
+risk_pct = 1.0
+max_leverage = 5.0
+
+# time filter (UTC killzones; see detectors/killzones.py)
+use_killzones = true
+killzones = ["london", "new_york"]
