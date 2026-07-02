@@ -241,6 +241,33 @@ Holdouts (untouched): SOLUSDT 2023–2026 and BTCUSDT 2019–2022, 15m + 1m,
 run once each at the frozen commit. Decision rule is declared in the
 preregistration; a fail closes the mechanical-ICT program here.
 
+## Study V3 "Origin": the narrative engine (development phase)
+
+V3 pivots from testing ICT's composition to **originating our own
+mechanization of HTF judgment** — the "which way is the market going"
+layer that ICT treats as the majority contributor. Instead of a single
+structure veto, `strategy/narrative.py` aggregates a weighted vote of
+four codified narrative factors (per daily/4h bar, close-visible only):
+
+| Factor | Codifies |
+|---|---|
+| `struct_mtf` | 4h structure direction (last BOS/MSS) |
+| `struct_htf` | daily structure direction |
+| `dol` | draw on liquidity: untaken daily pools + unfilled daily FVGs above vs. below price |
+| `ipda` | IPDA 20-day data-range events: close-break = continuation, sweep-and-recover = reversal, held for N days |
+
+A conviction threshold enforces *no narrative, no trade* (`bias_mode =
+"narrative"`, `narrative_min_conviction`). The ICT trigger stack
+(sweep → MSS → IFVG/FVG/OB retest confirmation) rides underneath,
+unchanged.
+
+Protocol ([`reports/PREREGISTRATION_V3.md`](reports/PREREGISTRATION_V3.md)):
+development and tuning happen **only on the burned sets** (BTC/ETH
+2023–2026 — already worthless as confirmation, so legitimately
+in-sample); the untouched holdouts are BNBUSDT 2023–2026 and ETHUSDT
+2019–2022, one shot each after the freeze. SOL 2023–2026 and BTC
+2019–2022 stay reserved for V2.1.
+
 ## Testing on index futures / equities (ES, SPY, other high-liquidity markets)
 
 ICT's own teaching centers on ES/NQ futures and FX, so index markets are

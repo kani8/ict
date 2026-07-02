@@ -67,6 +67,26 @@ class SMCStrategy:
             self.htf_pools = []
         self.bias2 = (self._htf_context(cfg.bias_htf2_multiplier)[0]
                       if cfg.bias_htf2_multiplier else None)
+        if cfg.bias_mode == "narrative":
+            # V3: the narrative engine's weighted factor vote replaces the
+            # structure-direction bias (dual-TF agreement is folded into its
+            # structure factors, so bias2 is redundant here)
+            from .narrative import NarrativeEngine
+
+            self.narrative = NarrativeEngine(
+                candles, swing_k=cfg.swing_k,
+                mtf_multiplier=cfg.htf_multiplier,
+                htf_multiplier=cfg.bias_htf2_multiplier or 96,
+                eq_tol_atr=cfg.eq_tol_atr, min_gap_atr=cfg.min_gap_atr,
+                atr_period=cfg.atr_period, ipda_days=cfg.ipda_days,
+                ipda_hold_days=cfg.ipda_hold_days,
+                weights=cfg.narrative_weights,
+                min_conviction=cfg.narrative_min_conviction,
+            )
+            self.bias = self.narrative.bias
+            self.bias2 = None
+        elif cfg.bias_mode != "structure":
+            raise ValueError("bias_mode must be 'structure' or 'narrative'")
 
         if cfg.use_killzones:
             table = ET_BY_NAME if cfg.killzone_tz != "UTC" else BY_NAME

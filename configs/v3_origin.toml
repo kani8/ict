@@ -1,0 +1,52 @@
+# Study V3 "Origin": narrative-engine bias — our own mechanization of HTF
+# judgment (4h+daily structure, draw on liquidity, IPDA 20-day range events)
+# with the ICT trigger stack underneath. Development may use only the burned
+# datasets (BTC/ETH 2023-2026); holdouts are declared in
+# reports/PREREGISTRATION_V3.md.
+
+[strategy]
+# detectors
+swing_k = 3
+htf_multiplier = 16            # 4h structure factor + eq/draw gates
+eq_tol_atr = 0.25
+min_gap_atr = 0.25
+atr_period = 14
+max_leg_bars = 100
+
+# narrative bias (V3)
+bias_mode = "narrative"
+bias_htf2_multiplier = 96      # daily timeframe for the HTF factors
+narrative_weights = [1.0, 1.0, 1.0, 1.0]   # struct_4h, struct_daily, dol, ipda
+narrative_min_conviction = 0.5
+ipda_days = 20
+ipda_hold_days = 10
+
+# bias-dominance gates (kept from V2.1)
+use_htf_bias = true
+require_htf_discount = true
+require_draw = true
+
+# triggers (kept from V2.1)
+sweep_to_mss_bars = 30
+order_expiry_bars = 30
+require_ote = true
+require_discount = true
+poi_priority = ["ifvg", "fvg", "ob"]
+entry_confirmation = true
+
+# risk / exits
+stop_buffer_atr = 0.25
+min_rr = 1.5
+default_rr = 2.0
+risk_pct = 1.0
+max_leverage = 5.0
+breakeven_r = 1.0
+
+# time filters
+use_killzones = true
+killzone_tz = "America/New_York"
+killzones = ["london", "new_york", "silver_bullet"]
+avoid_news = true
+news_before_min = 30
+news_after_min = 60
+news_day_blackout = true

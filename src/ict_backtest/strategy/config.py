@@ -19,6 +19,13 @@ class SMCConfig:
 
     # -- setup sequencing ------------------------------------------------------
     use_htf_bias: bool = True      # only trade in the HTF structure direction
+    bias_mode: str = "structure"   # "structure" (V1/V2) or "narrative" (V3):
+                                   # weighted vote of 4h+daily structure, draw
+                                   # on liquidity, and IPDA range events
+    narrative_weights: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+    narrative_min_conviction: float = 0.5  # |score| below this = no bias, no trade
+    ipda_days: int = 20            # IPDA data-range lookback (daily bars)
+    ipda_hold_days: int = 10       # how long a range event colors the narrative
     # bias-dominance gates: HTF judgment as the majority contributor, with the
     # sweep/MSS/POI mechanics acting only as triggers (all default-off)
     bias_htf2_multiplier: int = 0  # second, higher bias TF that must also agree
@@ -66,7 +73,7 @@ class SMCConfig:
         if unknown:
             raise ValueError(f"unknown config keys: {sorted(unknown)}")
         kwargs = dict(section)
-        for key in ("poi_priority", "killzones"):
+        for key in ("poi_priority", "killzones", "narrative_weights"):
             if key in kwargs:
                 kwargs[key] = tuple(kwargs[key])
         return cls(**kwargs)
