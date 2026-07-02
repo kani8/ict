@@ -1,0 +1,478 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root{
+    --bg:#17191b; --panel:#1e2124; --panel2:#24282c; --border:#2b2f34; --grid:#22262a;
+    --ink:#e6e4df; --ink2:#a09d97; --ink3:#6e6b66;
+    --up:#26A69A; --dn:#EF5350; --liq:#5B8DEF; --ob:#BC7A10; --inv:#D2609A;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);height:100vh;
+       display:flex;flex-direction:column;overflow:hidden}
+  button,select{font:inherit;color:var(--ink2);background:var(--panel2);border:1px solid var(--border);
+       border-radius:4px;padding:3px 9px;cursor:pointer}
+  button:hover{color:var(--ink)} button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--liq)}
+  button.on{color:var(--ink);border-color:var(--ink3);background:#2c3136}
+
+  header{display:flex;align-items:center;gap:14px;padding:8px 14px;border-bottom:1px solid var(--border);
+         background:var(--panel);flex-wrap:wrap}
+  header h1{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+  header h1 b{color:var(--ink)}
+  .group{display:flex;gap:4px;align-items:center}
+  .group .lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-right:2px}
+  .chip{font-size:11px;padding:2px 8px;border-radius:10px}
+  .chip .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:1px}
+  .spacer{flex:1}
+
+  main{flex:1;display:flex;min-height:0}
+  #wrap{flex:1;position:relative;min-width:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+  #tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--border);
+       border-radius:4px;padding:6px 9px;font:11px var(--mono);color:var(--ink2);display:none;
+       white-space:pre;z-index:5;font-variant-numeric:tabular-nums}
+
+  aside{width:288px;border-left:1px solid var(--border);background:var(--panel);
+        padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+  aside h2{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);
+           border-bottom:1px solid var(--border);padding-bottom:5px}
+  .badge{display:inline-block;font:600 12px var(--sans);letter-spacing:.08em;padding:3px 12px;border-radius:3px}
+  .badge.bull{background:rgba(38,166,154,.16);color:var(--up);border:1px solid rgba(38,166,154,.45)}
+  .badge.bear{background:rgba(239,83,80,.14);color:var(--dn);border:1px solid rgba(239,83,80,.45)}
+  .badge.flat{background:rgba(160,157,151,.1);color:var(--ink2);border:1px solid var(--border)}
+  #meter{height:6px;background:var(--panel2);border-radius:3px;position:relative;margin-top:8px}
+  #meter i{position:absolute;top:0;bottom:0;border-radius:3px}
+  #meter .mid{left:50%;width:1px;background:var(--ink3);border-radius:0}
+  #scoreLbl{font:11px var(--mono);color:var(--ink2);margin-top:4px}
+  .factors{display:flex;gap:4px;flex-wrap:wrap}
+  .fchip{font:10px var(--mono);padding:2px 6px;border-radius:3px;border:1px solid var(--border);color:var(--ink2)}
+  .fchip.p{border-color:rgba(38,166,154,.5);color:var(--up)}
+  .fchip.n{border-color:rgba(239,83,80,.5);color:var(--dn)}
+  #status{font:12px/1.5 var(--sans);color:var(--ink);background:var(--panel2);
+          border-left:3px solid var(--liq);padding:8px 10px;border-radius:0 4px 4px 0;min-height:40px}
+  .gates{display:flex;gap:6px}
+  .gate{font-size:10px;letter-spacing:.06em;padding:2px 8px;border-radius:9px;border:1px solid var(--border);color:var(--ink3)}
+  .gate.on{color:var(--liq);border-color:rgba(91,141,239,.5)}
+  .gate.blk{color:var(--dn);border-color:rgba(239,83,80,.5)}
+  #ohlc,#tradeBox{font:11px var(--mono);color:var(--ink2);line-height:1.7;font-variant-numeric:tabular-nums}
+  #tradeBox b{color:var(--ink)}
+
+  footer{display:flex;align-items:center;gap:12px;padding:7px 14px;border-top:1px solid var(--border);background:var(--panel)}
+  footer input[type=range]{flex:1;accent-color:var(--liq)}
+  #clock{font:11px var(--mono);color:var(--ink2);min-width:150px;text-align:right;font-variant-numeric:tabular-nums}
+
+  #inspector{position:absolute;inset:40px 60px;background:var(--panel);border:1px solid var(--border);
+             border-radius:6px;z-index:20;display:none;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  #inspector.open{display:flex}
+  #inspector .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+  #inspector .bar h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+  #inspector .scroll{overflow:auto;padding:0 14px 14px}
+  #inspector table{width:100%;border-collapse:collapse;font:11px var(--mono);font-variant-numeric:tabular-nums}
+  #inspector th{text-align:left;color:var(--ink3);font-weight:500;padding:8px 10px 4px 0;position:sticky;top:0;background:var(--panel)}
+  #inspector td{color:var(--ink2);padding:3px 10px 3px 0;border-top:1px solid var(--grid);white-space:nowrap}
+</style>
+
+<header>
+  <h1><b>ICT</b> · Strategy Replay</h1>
+  <div class="group" id="tfs"><span class="lbl">TF</span></div>
+  <div class="group" id="layerChips"><span class="lbl">Layers</span></div>
+  <span class="spacer"></span>
+  <div class="group">
+    <button id="restart" title="Rewind (Home)">⏮</button>
+    <button id="play" title="Play / pause (Space)">▶ Play</button>
+    <select id="speed" title="bars per second">
+      <option value="2">2×</option><option value="6">6×</option><option value="12" selected>12×</option>
+      <option value="30">30×</option><option value="80">80×</option>
+    </select>
+    <button id="live" title="Jump to latest (End)">Live ⇥</button>
+    <button id="inspBtn" title="Table of visible artifacts">Inspector</button>
+  </div>
+</header>
+
+<main>
+  <div id="wrap"><canvas id="cv"></canvas><div id="tip"></div></div>
+  <aside>
+    <div><h2>Narrative</h2>
+      <div style="margin-top:8px"><span id="bias" class="badge flat">FLAT</span></div>
+      <div id="meter"><i class="mid"></i><i id="meterFill"></i></div>
+      <div id="scoreLbl">score 0.00</div>
+      <div class="factors" id="factors" style="margin-top:8px"></div>
+    </div>
+    <div><h2>State machine</h2><div id="status" style="margin-top:8px">—</div></div>
+    <div><h2>Gates</h2><div class="gates" style="margin-top:8px">
+      <span class="gate" id="gKz">killzone</span><span class="gate" id="gNews">news</span></div></div>
+    <div><h2>Bar</h2><div id="ohlc" style="margin-top:6px">—</div></div>
+    <div><h2>Trade</h2><div id="tradeBox" style="margin-top:6px">—</div></div>
+  </aside>
+</main>
+
+<footer>
+  <span class="lbl" style="font-size:10px;letter-spacing:.1em;color:var(--ink3)">REPLAY</span>
+  <input type="range" id="scrub" min="0" max="1" value="1" step="1" aria-label="Reveal position">
+  <span id="clock">—</span>
+</footer>
+
+<div id="inspector" role="dialog" aria-label="Visible artifacts">
+  <div class="bar"><h3>Artifacts visible at cursor</h3><button id="inspClose">Close ✕</button></div>
+  <div class="scroll"><table><thead>
+    <tr><th>Type</th><th>Dir</th><th>Formed</th><th>Zone / level</th><th>State</th></tr>
+  </thead><tbody id="inspRows"></tbody></table></div>
+</div>
+
+<script type="application/json" id="bundle">__DATA__</script>
+<script>
+"use strict";
+const B = JSON.parse(document.getElementById("bundle").textContent);
+const TL = B.timeline;
+const CSS = getComputedStyle(document.documentElement);
+const C = n => CSS.getPropertyValue(n).trim();
+const COL = {up:C("--up"), dn:C("--dn"), liq:C("--liq"), ob:C("--ob"), inv:C("--inv"),
+             ink:C("--ink"), ink2:C("--ink2"), ink3:C("--ink3"), grid:C("--grid")};
+const baseTfIdx = B.tfs.findIndex(t => t.tf_s === B.meta.base_tf_s);
+const base = B.tfs[baseTfIdx];
+
+// ---- state ---------------------------------------------------------------
+let tfi = baseTfIdx;
+let view = {i0: 0, n: 180};
+let revealTs = base.ts[base.ts.length - 1];
+let hoverI = -1, playing = false, lastFrame = 0, follow = true;
+const layers = {fvg:true, ob:true, pool:true, swing:false, ev:true, kz:true, news:true, trade:true};
+
+const tf = () => B.tfs[tfi];
+function ub(a, x){ let lo=0, hi=a.length; while(lo<hi){const m=(lo+hi)>>1; if(a[m]<=x) lo=m+1; else hi=m;} return lo; }
+const R = () => Math.max(0, ub(tf().ts, revealTs) - 1);
+const baseR = () => Math.max(0, ub(base.ts, revealTs) - 1);
+function fmtP(p){ return p >= 1000 ? p.toLocaleString("en-US",{maximumFractionDigits:1})
+                                   : p.toLocaleString("en-US",{maximumFractionDigits:4}); }
+function fmtT(ts){ const d = new Date(ts*1000);
+  const p = n => String(n).padStart(2,"0");
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`; }
+
+// ---- canvas --------------------------------------------------------------
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const wrap = document.getElementById("wrap"), tip = document.getElementById("tip");
+let W = 0, H = 0, plotW = 0, plotH = 0;
+const AXR = 74, AXB = 24;
+function resize(){
+  const r = wrap.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  cv.width = r.width*dpr; cv.height = r.height*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  W = r.width; H = r.height; plotW = W - AXR; plotH = H - AXB; draw();
+}
+addEventListener("resize", resize);
+
+let yMin = 0, yMax = 1;
+const xC = i => (i + 0.5 - view.i0) / view.n * plotW;
+const yP = p => plotH - (p - yMin) / (yMax - yMin) * plotH;
+
+function clampView(){
+  const r = R();
+  view.n = Math.max(20, Math.min(view.n, Math.max(40, r + 20)));
+  view.i0 = Math.max(-view.n*0.6, Math.min(view.i0, r - 3));
+}
+// unresolved zones stop extending after a while (stale levels leave the chart)
+const EXT = {fvg: 140, ob: 240, pool: 420};
+function endAt(idx, formed, ext){
+  const r = R();
+  const cap = ext ? Math.min(formed + ext, r) : r;
+  return idx === -1 ? cap : Math.min(idx, r);
+}
+
+function draw(){
+  clampView();
+  const t = tf(), r = R();
+  const a = Math.max(0, Math.floor(view.i0)), b = Math.min(r, Math.ceil(view.i0 + view.n));
+  ctx.clearRect(0,0,W,H);
+  if (b < a) return;
+  yMin = Infinity; yMax = -Infinity;
+  for (let i=a;i<=b;i++){ if(t.l[i]<yMin) yMin=t.l[i]; if(t.h[i]>yMax) yMax=t.h[i]; }
+  const pad = (yMax-yMin)*0.08 || 1; yMin-=pad; yMax+=pad;
+  const bw = plotW/view.n, cw = Math.max(1, Math.min(13, bw*0.72));
+
+  ctx.save(); ctx.beginPath(); ctx.rect(0,0,plotW,plotH); ctx.clip();
+
+  // session shading
+  if (layers.kz || layers.news){
+    for (let i=a;i<=b;i++){
+      if (layers.kz && t.kz[i]){ ctx.fillStyle="rgba(91,141,239,.07)"; ctx.fillRect(xC(i)-bw/2,0,bw+0.5,plotH); }
+      if (layers.news && t.news[i]){ ctx.fillStyle="rgba(239,83,80,.06)"; ctx.fillRect(xC(i)-bw/2,0,bw+0.5,plotH); }
+    }
+  }
+  // grid
+  const step = niceStep((yMax-yMin)/6);
+  ctx.strokeStyle = COL.grid; ctx.lineWidth = 1;
+  for (let p=Math.ceil(yMin/step)*step; p<yMax; p+=step){
+    ctx.beginPath(); ctx.moveTo(0, yP(p)+.5); ctx.lineTo(plotW, yP(p)+.5); ctx.stroke();
+  }
+
+  const lbl = (txt,x,y,col) => { ctx.fillStyle=col; ctx.font="10px "+CSS.getPropertyValue("--mono"); ctx.fillText(txt,x,y); };
+
+  // FVG / IFVG zones
+  if (layers.fvg) for (const g of t.fvg){
+    const [i,lo,hi,dir,vis,,fill,inv,invFail] = g;
+    if (vis > r) continue;
+    const zEnd = endAt(fill, i, EXT.fvg);
+    const invStart = (inv!==-1 && inv<=r) ? inv : -1;
+    const baseEnd = invStart!==-1 ? Math.min(invStart, zEnd) : zEnd;
+    const dead = (fill!==-1 && fill<=r) || invStart!==-1;
+    if (baseEnd >= a && i <= b)
+      zone(i, baseEnd, lo, hi, dir>0?COL.up:COL.dn, dead?.04:.12, dir>0?"FVG+":"FVG−", dead);
+    if (invStart!==-1){ const e2 = endAt(invFail, invStart, EXT.fvg);
+      const invDead = invFail!==-1 && invFail<=r;
+      if (e2 >= invStart) zone(invStart, e2, lo, hi, COL.inv, invDead?.05:.14, "IFVG", invDead); }
+  }
+  // Order blocks
+  if (layers.ob) for (const o of t.ob){
+    const [i,lo,hi,dir,vis,,invd] = o;
+    if (vis > r) continue;
+    const e = endAt(invd, i, EXT.ob);
+    const dead = invd!==-1 && invd<=r;
+    if (e >= a && i <= b){ zone(i, e, lo, hi, COL.ob, dead?.04:.12, dir>0?"OB+":"OB−", dead);
+      if (invd!==-1 && invd<=r) lbl("✕", xC(invd)-3, yP((lo+hi)/2)+3, COL.ob); }
+  }
+  // Liquidity pools
+  if (layers.pool) for (const p of t.pool){
+    const [side,level,first,vis,taken,kind,members] = p;
+    if (vis > r) continue;
+    const e = endAt(taken, first, EXT.pool);
+    if (e < a || first > b) continue;
+    const pdead = taken!==-1 && taken<=r;
+    ctx.globalAlpha = pdead ? .35 : 1;
+    ctx.strokeStyle = COL.liq; ctx.setLineDash([5,4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xC(first), yP(level)+.5); ctx.lineTo(xC(e), yP(level)+.5); ctx.stroke();
+    ctx.setLineDash([]);
+    const tag = (side>0?"BSL":"SSL") + (members>1?" ×"+members:"");
+    lbl(tag, xC(e)+5, yP(level)+3, COL.liq);
+    if (taken!==-1 && taken<=r && kind)
+      lbl(kind===1?"⤺ sweep":"→ run", xC(taken)-14, yP(level)+(side>0?-6:13), kind===1?COL.inv:COL.ink2);
+    ctx.globalAlpha = 1;
+  }
+  // Structure events
+  if (layers.ev) for (const e of t.ev){
+    const [i,dir,kind,level,si] = e;
+    if (i > r || i < a-40 || i > b) continue;
+    const col = dir>0?COL.up:COL.dn;
+    ctx.strokeStyle = col; ctx.setLineDash([2,3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xC(Math.max(si,a-40)), yP(level)+.5); ctx.lineTo(xC(i), yP(level)+.5); ctx.stroke();
+    ctx.setLineDash([]);
+    const y = dir>0 ? yP(t.h[i]) - 8 : yP(t.l[i]) + 16;
+    lbl(kind===0?"BOS":"MSS", xC(i)-10, y, col);
+  }
+  // Swings
+  if (layers.swing) for (const s of t.swing){
+    const [i,price,kind,vis] = s;
+    if (vis > r || i < a || i > b) continue;
+    ctx.fillStyle = COL.ink3;
+    tri(xC(i), yP(price) + (kind>0?-7:7), kind>0);
+  }
+  // Candles
+  for (let i=a;i<=b;i++){
+    const up = t.c[i] >= t.o[i], col = up?COL.up:COL.dn, x = xC(i);
+    ctx.strokeStyle = col; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, yP(t.h[i])); ctx.lineTo(x, yP(t.l[i])); ctx.stroke();
+    const y1 = yP(Math.max(t.o[i],t.c[i])), y2 = yP(Math.min(t.o[i],t.c[i]));
+    ctx.fillStyle = col; ctx.fillRect(x-cw/2, y1, cw, Math.max(1, y2-y1));
+  }
+  // Trades (indices live on the base TF -> map by timestamp)
+  if (layers.trade && TL) for (const tr of TL.trades){
+    const [ei,xi,side,ep,xp,sl,tp,rr,pnl,reason] = tr;
+    const eTs = base.ts[ei], xTs = base.ts[xi];
+    if (eTs > revealTs) continue;
+    const eI = ub(t.ts, eTs)-1, xI2 = Math.min(ub(t.ts, Math.min(xTs, revealTs))-1, r);
+    if (xI2 < a || eI > b) continue;
+    for (const [lvl,col] of [[sl,COL.dn],[tp,COL.up]]){
+      if (!lvl) continue;
+      ctx.strokeStyle = col; ctx.setLineDash([2,2]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(xC(eI), yP(lvl)+.5); ctx.lineTo(xC(xI2), yP(lvl)+.5); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.fillStyle = side>0?COL.up:COL.dn;
+    tri(xC(eI), yP(ep)+(side>0?10:-10), side>0);
+    if (xTs <= revealTs){
+      ctx.beginPath(); ctx.arc(xC(xI2), yP(xp), 3.5, 0, 7); ctx.fill();
+      lbl(`${pnl>=0?"+":""}${pnl.toFixed(0)} (${reason})`, xC(xI2)+6, yP(xp)-6, side>0?COL.up:COL.dn);
+    }
+  }
+  // Crosshair
+  if (hoverI >= a && hoverI <= b){
+    ctx.strokeStyle = COL.ink3; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xC(hoverI)+.5, 0); ctx.lineTo(xC(hoverI)+.5, plotH); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // Reveal edge
+  if (r < t.ts.length - 1 && r >= a && r <= b + 1){
+    ctx.strokeStyle = "rgba(91,141,239,.55)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(xC(r)+bw/2, 0); ctx.lineTo(xC(r)+bw/2, plotH); ctx.stroke();
+  }
+  ctx.restore();
+
+  // Axes
+  ctx.fillStyle = COL.ink3; ctx.font = "10px "+CSS.getPropertyValue("--mono");
+  for (let p=Math.ceil(yMin/step)*step; p<yMax; p+=step) ctx.fillText(fmtP(p), plotW+8, yP(p)+3);
+  const tStep = Math.max(1, Math.round(view.n/7));
+  for (let i=Math.ceil(a/tStep)*tStep; i<=b; i+=tStep){
+    const s = fmtT(t.ts[i]); ctx.fillText(t.tf_s>=86400 ? s.slice(0,10) : s.slice(5), xC(i)-28, H-8);
+  }
+
+  function zone(i0z, i1z, lo, hi, col, alpha, tag, dead){
+    const x0 = xC(i0z)-bw/2, x1 = xC(i1z)+bw/2;
+    ctx.globalAlpha = alpha; ctx.fillStyle = col; ctx.fillRect(x0, yP(hi), x1-x0, yP(lo)-yP(hi));
+    ctx.globalAlpha = .5; ctx.strokeStyle = col; ctx.lineWidth = 1;
+    ctx.strokeRect(x0+.5, yP(hi)+.5, x1-x0-1, yP(lo)-yP(hi)-1);
+    ctx.globalAlpha = 1;
+    if (bw > 3 && (!dead || bw > 9)) lbl(tag, x0+3, yP(hi)+10, col);
+  }
+  function tri(x,y,upward){ ctx.beginPath();
+    ctx.moveTo(x, upward? y-4 : y+4); ctx.lineTo(x-4, upward? y+3 : y-3); ctx.lineTo(x+4, upward? y+3 : y-3);
+    ctx.closePath(); ctx.fill(); }
+}
+function niceStep(raw){ const m = Math.pow(10, Math.floor(Math.log10(raw)));
+  for (const k of [1,2,2.5,5,10]) if (m*k >= raw) return m*k; return m*10; }
+
+// ---- sidebar ---------------------------------------------------------------
+const el = id => document.getElementById(id);
+function updatePanel(){
+  const t = tf();
+  const i = hoverI >= 0 ? Math.min(hoverI, R()) : R();
+  const bi = Math.min(ub(base.ts, t.ts[Math.max(0,i)])-1, baseR());
+  if (!TL || bi < 0){ return; }
+  const b = TL.bias[bi], score = TL.score[bi];
+  const badge = el("bias");
+  badge.textContent = b>0?"BULLISH":b<0?"BEARISH":"FLAT";
+  badge.className = "badge " + (b>0?"bull":b<0?"bear":"flat");
+  const f = el("meterFill"), pct = Math.min(1,Math.abs(score))*50;
+  f.style.left = score>=0 ? "50%" : (50-pct)+"%"; f.style.width = pct+"%";
+  f.style.background = score>=0?COL.up:COL.dn;
+  el("scoreLbl").textContent = "score " + score.toFixed(2);
+  const fc = el("factors"); fc.innerHTML = "";
+  for (const [name, arr] of Object.entries(TL.factors)){
+    const v = arr[bi], d = document.createElement("span");
+    d.className = "fchip " + (v>0.05?"p":v<-0.05?"n":"");
+    d.textContent = name.replace("struct_","s·")+" "+(v>0?"+":"")+v.toFixed(1);
+    fc.appendChild(d);
+  }
+  const sp = TL.status; let lo=0, hi=sp.length;
+  while(lo<hi){const m=(lo+hi)>>1; if(sp[m][0]<=bi) lo=m+1; else hi=m;}
+  el("status").textContent = lo>0 ? sp[lo-1][1] : "—";
+  el("gKz").className = "gate" + (base.kz[bi] ? " on":"");
+  el("gNews").className = "gate" + (base.news[bi] ? " blk":"");
+  el("ohlc").innerHTML = i>=0 ? `${fmtT(t.ts[i])} UTC<br>O ${fmtP(t.o[i])} H ${fmtP(t.h[i])}<br>L ${fmtP(t.l[i])} C ${fmtP(t.c[i])}` : "—";
+  const tr = TL.trades.find(x => x[0] <= bi && bi <= x[1]);
+  el("tradeBox").innerHTML = tr
+    ? `<b>${tr[2]>0?"LONG":"SHORT"}</b> @ ${fmtP(tr[3])}<br>SL ${fmtP(tr[5])} · TP ${fmtP(tr[6])}`
+    : (TL.trades.filter(x => x[1] <= bi).slice(-1).map(x =>
+        `last: ${x[2]>0?"long":"short"} ${x[8]>=0?"+":""}${x[8].toFixed(0)} (${x[9]}, R ${x[7]})`)[0] || "flat");
+  el("clock").textContent = fmtT(revealTs) + " UTC";
+}
+
+// ---- interactions ----------------------------------------------------------
+let dragging = null;
+cv.addEventListener("mousedown", e => { dragging = {x:e.clientX, i0:view.i0}; follow = false; });
+addEventListener("mouseup", () => dragging = null);
+cv.addEventListener("mousemove", e => {
+  const rect = cv.getBoundingClientRect(), mx = e.clientX-rect.left;
+  if (dragging){ view.i0 = dragging.i0 - (e.clientX-dragging.x)/(plotW/view.n); draw(); return; }
+  hoverI = Math.floor(view.i0 + mx/plotW*view.n);
+  const t = tf();
+  if (hoverI>=0 && hoverI<=R() && mx < plotW){
+    tip.style.display="block";
+    tip.style.left = Math.min(mx+14, plotW-150)+"px"; tip.style.top = (e.clientY-rect.top+12)+"px";
+    tip.textContent = `${fmtT(t.ts[hoverI])}\nO ${fmtP(t.o[hoverI])}  H ${fmtP(t.h[hoverI])}\nL ${fmtP(t.l[hoverI])}  C ${fmtP(t.c[hoverI])}`;
+  } else { tip.style.display="none"; hoverI=-1; }
+  draw(); updatePanel();
+});
+cv.addEventListener("mouseleave", () => { hoverI=-1; tip.style.display="none"; draw(); updatePanel(); });
+cv.addEventListener("wheel", e => {
+  e.preventDefault();
+  const rect = cv.getBoundingClientRect(), fx = (e.clientX-rect.left)/plotW;
+  const anchor = view.i0 + fx*view.n, k = e.deltaY > 0 ? 1.18 : 1/1.18;
+  view.n = Math.max(20, Math.min(3000, view.n*k));
+  view.i0 = anchor - fx*view.n; draw();
+}, {passive:false});
+
+function setReveal(ts){
+  revealTs = Math.max(base.ts[0], Math.min(ts, base.ts[base.ts.length-1]));
+  el("scrub").value = baseR();
+  if (follow){ view.i0 = R() - view.n*0.78; }
+  draw(); updatePanel();
+}
+el("scrub").max = base.ts.length - 1;
+el("scrub").value = base.ts.length - 1;
+el("scrub").addEventListener("input", e => { follow=false; setReveal(base.ts[+e.target.value]); });
+el("live").addEventListener("click", () => { follow=true; setReveal(base.ts[base.ts.length-1]); });
+el("restart").addEventListener("click", () => { follow=true;
+  setReveal(base.ts[Math.max(0, Math.floor(base.ts.length*0.02))]); });
+const playBtn = el("play");
+playBtn.addEventListener("click", () => setPlaying(!playing));
+function setPlaying(p){
+  playing = p; playBtn.textContent = p ? "⏸ Pause" : "▶ Play"; playBtn.classList.toggle("on", p);
+  if (p){ follow = true;
+    if (revealTs >= base.ts[base.ts.length-1]) setReveal(base.ts[Math.floor(base.ts.length*0.02)]);
+    lastFrame = performance.now(); requestAnimationFrame(tick); }
+}
+function tick(now){
+  if (!playing) return;
+  const dt = (now - lastFrame)/1000; lastFrame = now;
+  setReveal(revealTs + tf().tf_s * (+el("speed").value) * dt);
+  if (revealTs >= base.ts[base.ts.length-1]) setPlaying(false);
+  else requestAnimationFrame(tick);
+}
+addEventListener("keydown", e => {
+  if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;
+  if (e.code === "Space"){ e.preventDefault(); setPlaying(!playing); }
+  else if (e.key === "ArrowRight"){ follow=true; setReveal(revealTs + tf().tf_s); }
+  else if (e.key === "ArrowLeft"){ follow=true; setReveal(revealTs - tf().tf_s); }
+  else if (e.key === "End"){ follow=true; setReveal(base.ts[base.ts.length-1]); }
+  else if (e.key === "Home") el("restart").click();
+  else if (e.key === "Escape") el("inspector").classList.remove("open");
+});
+
+// ---- toolbar ----------------------------------------------------------------
+const tfsBox = el("tfs");
+B.tfs.forEach((t, i) => {
+  const b = document.createElement("button");
+  b.textContent = t.label; b.classList.toggle("on", i===tfi);
+  b.addEventListener("click", () => { tfi = i;
+    [...tfsBox.querySelectorAll("button")].forEach((x,j)=>x.classList.toggle("on", j===tfi));
+    view.n = Math.min(180, t.ts.length); view.i0 = R() - view.n*0.78; draw(); updatePanel(); });
+  tfsBox.appendChild(b);
+});
+const chipDefs = [["fvg","FVG / IFVG",COL.up],["ob","Order blocks",COL.ob],["pool","Liquidity",COL.liq],
+                  ["ev","BOS / MSS",COL.ink2],["swing","Swings",COL.ink3],["kz","Killzones","rgba(91,141,239,.8)"],
+                  ["news","News",COL.dn],["trade","Trades",COL.up]];
+const chipBox = el("layerChips");
+for (const [key,name,col] of chipDefs){
+  const b = document.createElement("button");
+  b.className = "chip" + (layers[key] ? " on":"");
+  b.innerHTML = `<span class="sw" style="background:${col}"></span>${name}`;
+  b.addEventListener("click", () => { layers[key]=!layers[key]; b.classList.toggle("on", layers[key]); draw(); });
+  chipBox.appendChild(b);
+}
+
+// ---- inspector ----------------------------------------------------------------
+el("inspBtn").addEventListener("click", () => { fillInspector(); el("inspector").classList.add("open"); });
+el("inspClose").addEventListener("click", () => el("inspector").classList.remove("open"));
+function fillInspector(){
+  const t = tf(), r = R(), rows = [];
+  const life = (dead, word) => dead!==-1 && dead<=r ? `${word} @ ${fmtT(t.ts[dead]).slice(5)}` : "live";
+  for (const g of t.fvg){ if (g[4] > r) continue;
+    const inverted = g[7]!==-1 && g[7]<=r;
+    rows.push([inverted?"IFVG":"FVG", g[3]>0?"+":"−", fmtT(t.ts[g[0]]),
+      `${fmtP(g[1])} – ${fmtP(g[2])}`, inverted ? life(g[8], "failed") : life(g[6], "filled")]); }
+  for (const o of t.ob){ if (o[4] > r) continue;
+    rows.push(["Order block", o[3]>0?"+":"−", fmtT(t.ts[o[0]]),
+      `${fmtP(o[1])} – ${fmtP(o[2])}`, life(o[6], "invalidated")]); }
+  for (const p of t.pool){ if (p[3] > r) continue;
+    rows.push([p[0]>0?"BSL pool":"SSL pool", p[0]>0?"+":"−", fmtT(t.ts[p[2]]), fmtP(p[1]),
+      p[4]!==-1 && p[4]<=r ? (p[5]===1?"swept":"run") + " @ " + fmtT(t.ts[p[4]]).slice(5) : "resting"]); }
+  el("inspRows").innerHTML = rows.slice(-400).reverse().map(cells =>
+    "<tr>" + cells.map(c=>`<td>${c}</td>`).join("") + "</tr>").join("");
+}
+
+// ---- boot ---------------------------------------------------------------------
+document.title = B.meta.title;
+view.n = Math.min(180, tf().ts.length);
+view.i0 = R() - view.n*0.78;
+resize(); updatePanel();
+</script>

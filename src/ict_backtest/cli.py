@@ -66,6 +66,21 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_viz(args: argparse.Namespace) -> int:
+    from .viz import build_bundle, render_html
+
+    candles = load_candles(args.data, start=args.start, end=args.end)
+    if args.max_bars and len(candles) > args.max_bars:
+        candles = candles.slice(len(candles) - args.max_bars, len(candles))
+    config = SMCConfig.from_toml(args.config) if args.config else SMCConfig()
+    multipliers = tuple(int(x) for x in args.timeframes.split(","))
+    bundle = build_bundle(candles, config, multipliers,
+                          title=f"ICT Replay — {Path(args.data).stem}")
+    out = render_html(bundle, args.out)
+    print(f"wrote {out} ({out.stat().st_size / 1e6:.1f} MB) — open it in a browser")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ict-backtest",
                                      description="SMC/ICT strategy backtesting harness")
@@ -107,6 +122,18 @@ def main(argv: list[str] | None = None) -> int:
                    help="run the random-entry null test with N simulations")
     p.add_argument("--report", default=None, help="write the markdown report here")
     p.set_defaults(func=_cmd_run)
+
+    p = sub.add_parser("viz", help="render the interactive strategy-replay chart")
+    p.add_argument("--data", required=True)
+    p.add_argument("--config", default=None)
+    p.add_argument("--start", default=None)
+    p.add_argument("--end", default=None)
+    p.add_argument("--out", default="replay.html")
+    p.add_argument("--timeframes", default="1,4,16,96",
+                   help="comma-separated multipliers of the base timeframe")
+    p.add_argument("--max-bars", type=int, default=20_000,
+                   help="keep only the most recent N base bars (0 = all)")
+    p.set_defaults(func=_cmd_viz)
 
     args = parser.parse_args(argv)
     return args.func(args)
