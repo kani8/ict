@@ -1,10 +1,13 @@
 # Preregistration — Study V3 "Origin": narrative-engine bias
 
 - Date: 2026-07-02
-- Status: **development phase.** This study originates its own
+- Status: **crypto track CLOSED at development (2026-07-02) — stop
+  condition met; holdouts never touched. Index track (ES) is the sole
+  open line.** See the change log below and
+  `reports/dev/V3_ITER03_ADJUDICATION.md`. This study originates its own
   mechanization of HTF narrative formation rather than testing ICT's
-  canonical composition (V1: failed, concluded; V2.1: frozen, holdouts
-  pending and reserved).
+  canonical composition (V1: failed, concluded; V2.1: frozen, holdout
+  execution recommended retired).
 
 ## Hypothesis
 
@@ -65,6 +68,13 @@ Per user directive to investigate ICT's home market:
   ES export protocol ruled (back-adjusted, OI roll, 23h Globex).
   Stop-condition for crypto development declared in
   `reports/dev/V3_ITER02_ADJUDICATION.md`.
+- Iteration 03 → close: **stop condition ruled MET**
+  (`reports/dev/V3_ITER03_ADJUDICATION.md`). The crypto development
+  track is closed with a negative finding (no consistent forward-return
+  separation; ETH anti-predictive). The crypto holdouts (BNBUSDT
+  2023–2026, ETHUSDT 2019–2022) were never touched and remain reserved.
+  The index track (ES development / NQ holdout) is the sole open line,
+  gated on a user-supplied ES export.
 
 ## Decision rule (unchanged machinery)
 
