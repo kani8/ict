@@ -45,10 +45,19 @@ tradingstrategyguides.com trade-plan notes).
 
 Per user directive to investigate ICT's home market:
 
-- **ES (S&P 500 futures) 2023-01-01 → 2026-07-01, 15m+1m = development
-  data** for the index track — deliberately burned once sourced.
-- **NQ (Nasdaq-100 futures) 2023-2026 = reserved index holdout** —
-  never fetched, inspected, or summarized until an index-track freeze.
+- **ES (S&P 500 futures) = development data** for the index track —
+  deliberately burned once sourced. Window widened (2026-07-02, declared
+  before any index data contact) from 2023-2026 to the **full available
+  history 2010-06-06 → 2026-07-01** for statistical power: ~1,000+
+  non-overlapping 4-day diagnostic windows across four volatility
+  regimes vs ~230 in one regime. Source: Databento GLBX.MDP3, schema
+  OHLCV-1m (15m derived locally by exact resample), continuous symbol
+  `ES.n.0` (open-interest roll). Databento continuous series are
+  unadjusted splices: the executor must back-adjust at roll dates and
+  log them before any strategy run.
+- **NQ (Nasdaq-100 futures) = reserved index holdout**, widened to the
+  same 2010-2026 span (declared before contact) — never fetched,
+  inspected, or summarized until an index-track freeze.
 - Prerequisites for any ES run: continuous back-adjusted contract with
   roll method recorded; session-correct `--bars-per-year`; recalibrated
   costs; full high-impact calendar (incl. CPI) per
