@@ -51,10 +51,14 @@ Per user directive to investigate ICT's home market:
   history 2010-06-06 → 2026-07-01** for statistical power: ~1,000+
   non-overlapping 4-day diagnostic windows across four volatility
   regimes vs ~230 in one regime. Source: Databento GLBX.MDP3, schema
-  OHLCV-1m (15m derived locally by exact resample), continuous symbol
-  `ES.n.0` (open-interest roll). Databento continuous series are
-  unadjusted splices: the executor must back-adjust at roll dates and
-  log them before any strategy run.
+  OHLCV-1m (15m derived locally by exact resample), purchased as the
+  full ES product (all instruments, 1m bars). Roll method (declared
+  before data contact): the executor stitches the lead contract by
+  **volume rank** computed from the bars themselves (OHLCV carries
+  volume, not open interest), rolling when the next contract's daily
+  volume overtakes the front's, then **back-adjusts** at each roll and
+  logs every roll date in the iteration report. Spread instruments
+  (e.g. ESU6-ESZ6) are excluded before stitching.
 - **NQ (Nasdaq-100 futures) = reserved index holdout**, widened to the
   same 2010-2026 span (declared before contact) — never fetched,
   inspected, or summarized until an index-track freeze.
