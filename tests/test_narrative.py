@@ -168,6 +168,43 @@ def test_underpowered_result_is_labeled():
     assert "null test skipped" in report
 
 
+def test_await_abandonment_subreasons_sum():
+    candles = synthetic_candles(n=20_000, seed=21, base_vol=0.005)
+    cfg = SMCConfig(use_killzones=False, require_ote=False, require_discount=False,
+                    htf_multiplier=8, min_rr=1.0, entry_confirmation=True)
+    strat = SMCStrategy(candles, cfg)
+    Backtester(cost=CostModel(), initial_equity=100_000).run(candles, strat)
+    f = strat.funnel
+    assert f["placed_await"] > 0
+    assert f["await_abandoned"] == (f["await_expired"] + f["await_violated"]
+                                    + f["await_displaced"])
+
+
+def test_forward_return_table_separates_crafted_regimes():
+    import numpy as np
+    from ict_backtest.analytics import forward_return_table, render_forward_table
+
+    # 400 bars drifting up, then 400 drifting down, labeled correctly
+    up = [100 * (1.001 ** i) for i in range(400)]
+    down = [up[-1] * (0.999 ** i) for i in range(400)]
+    prices = up + down
+    candles = make_candles([(p, p, p, p) for p in prices])
+    states = np.array([1] * 400 + [-1] * 400)
+    rows = forward_return_table(candles, states, horizon_bars=50)
+    by_state = {r["state"]: r for r in rows}
+    assert by_state[1.0]["mean_fwd_logret"] > 0 > by_state[-1.0]["mean_fwd_logret"]
+    assert by_state[1.0]["t_stat"] > 2.0 and by_state[-1.0]["t_stat"] < -2.0
+    # non-overlapping sampling: 750 usable bars / 50 step = 15 samples total
+    assert sum(r["n"] for r in rows) == 15
+    text = render_forward_table(rows, "crafted")
+    assert "| +1 |" in text and "| -1 |" in text
+
+    with pytest.raises(ValueError):
+        forward_return_table(candles, states[:100], horizon_bars=50)
+    with pytest.raises(ValueError):
+        forward_return_table(candles, states, horizon_bars=10_000)
+
+
 def test_bias_mode_validation():
     candles = synthetic_candles(n=2000, seed=1)
     with pytest.raises(ValueError, match="bias_mode"):

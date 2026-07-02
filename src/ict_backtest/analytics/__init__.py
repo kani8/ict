@@ -7,6 +7,7 @@ from .significance import (
     random_baseline_test,
 )
 from .report import render_report
+from .diagnostics import forward_return_table, render_forward_table
 
 __all__ = [
     "compute_metrics",
@@ -17,4 +18,6 @@ __all__ = [
     "random_baseline_test",
     "BaselineTest",
     "render_report",
+    "forward_return_table",
+    "render_forward_table",
 ]

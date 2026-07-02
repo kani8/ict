@@ -138,7 +138,10 @@ class SMCStrategy:
             "placed_limit": 0,
             "placed_await": 0,
             "await_triggered": 0,
-            "await_abandoned": 0,     # expiry, POI death, or stop violation
+            "await_abandoned": 0,     # total of the sub-reasons below
+            "await_expired": 0,       # ran out of order_expiry_bars / POI died
+            "await_violated": 0,      # close crossed the stop before triggering
+            "await_displaced": 0,     # position opened / superseded by new setup
         }
 
     # ------------------------------------------------------------------
@@ -239,6 +242,7 @@ class SMCStrategy:
         if broker.position is not None:
             if self._await is not None:
                 self.funnel["await_abandoned"] += 1
+                self.funnel["await_displaced"] += 1
                 self._await = None
             self._manage(i, broker)
             return
@@ -306,6 +310,7 @@ class SMCStrategy:
         assert a is not None
         if i > a["expiry"] or (a["death"] != -1 and i >= a["death"]):
             self.funnel["await_abandoned"] += 1
+            self.funnel["await_expired"] += 1
             self._await = None
             return
         c = float(self.candles.close[i])
@@ -320,6 +325,7 @@ class SMCStrategy:
             confirmed = c < a["trigger"]
         if violated:
             self.funnel["await_abandoned"] += 1
+            self.funnel["await_violated"] += 1
             self._await = None
             return
         if not (touched and confirmed) or self.news_mask[i]:
@@ -329,6 +335,7 @@ class SMCStrategy:
         risk = (c - stop) if direction == BULL else (stop - c)
         if risk <= 0:
             self.funnel["await_abandoned"] += 1
+            self.funnel["await_violated"] += 1
             self._await = None
             return
         target = self._liquidity_target(direction, i, c, risk)
@@ -337,6 +344,7 @@ class SMCStrategy:
         qty = min(qty, equity * self.cfg.max_leverage / c)
         if qty <= 0:
             self.funnel["await_abandoned"] += 1
+            self.funnel["await_violated"] += 1
             self._await = None
             return
         broker.submit(Order(side=direction, qty=qty, type="market",

@@ -58,6 +58,13 @@ Per user directive to investigate ICT's home market:
   liquidity no longer counts as draw); setup-funnel instrumentation;
   null test skipped and labeled when n < 5. Declared before any holdout
   contact; crypto dev sets only.
+- Iteration 02 → 03: forward-return diagnostic added as a tested library
+  function (non-overlapping windows); await-abandonment split into
+  expired/violated/displaced; single declared lever for Iteration 03 =
+  entry path (`entry_confirmation` paired comparison), weights held;
+  ES export protocol ruled (back-adjusted, OI roll, 23h Globex).
+  Stop-condition for crypto development declared in
+  `reports/dev/V3_ITER02_ADJUDICATION.md`.
 
 ## Decision rule (unchanged machinery)
 
