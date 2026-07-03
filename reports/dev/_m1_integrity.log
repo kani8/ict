@@ -1,0 +1,42 @@
+=== btcusdt_15m (data/btcusdt_15m.parquet) ===
+  n_rows            : 122588
+  first_ts          : 2023-01-01T00:00:00Z
+  last_ts           : 2026-07-01T00:00:00Z
+  median_step_s     : 900
+  monotonic_increasing: True
+  n_duplicate_ts    : 0
+  n_backsteps       : 0
+  n_high_lt_maxoc   : 0
+  n_low_gt_minoc    : 0
+  n_high_lt_low     : 0
+  n_nonpositive_ohlc: 0
+  min_low / max_high: 16499.01 / 126199.63
+
+=== ethusdt_15m (data/ethusdt_15m.parquet) ===
+  n_rows            : 122588
+  first_ts          : 2023-01-01T00:00:00Z
+  last_ts           : 2026-07-01T00:00:00Z
+  median_step_s     : 900
+  monotonic_increasing: True
+  n_duplicate_ts    : 0
+  n_backsteps       : 0
+  n_high_lt_maxoc   : 0
+  n_low_gt_minoc    : 0
+  n_high_lt_low     : 0
+  n_nonpositive_ohlc: 0
+  min_low / max_high: 1190.57 / 4956.78
+
+=== es_15m (data/es_15m.parquet) ===
+  n_rows            : 376768
+  first_ts          : 2010-06-06T22:00:00Z
+  last_ts           : 2026-07-01T23:45:00Z
+  median_step_s     : 900
+  monotonic_increasing: True
+  n_duplicate_ts    : 0
+  n_backsteps       : 0
+  n_high_lt_maxoc   : 0
+  n_low_gt_minoc    : 0
+  n_high_lt_low     : 0
+  n_nonpositive_ohlc: 0
+  min_low / max_high: 1600.25 / 7697.0
+
