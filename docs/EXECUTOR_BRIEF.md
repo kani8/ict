@@ -20,8 +20,9 @@ is fidelity and observation, not improvisation.
 
 ## Hard rules
 
-1. **Write boundaries.** You may create files only under `reports/dev/`
-   and `data/` (data is gitignored). You never edit `src/`, `tests/`,
+1. **Write boundaries.** You may create files only under `reports/dev/`,
+   `reports/replays/` (generated replay HTMLs), and `data/` (data is
+   gitignored). You never edit `src/`, `tests/`,
    `configs/`, preregistrations, or verdicts. Spec changes are the
    architect's; if a result motivates one, propose it in your report.
 2. **Holdout discipline.** Never fetch, inspect, summarize, or "sanity

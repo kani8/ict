@@ -1,7 +1,15 @@
 # Preregistration — Measurement program "M": are ICT's descriptive claims true?
 
 - Date: 2026-07-03
-- Status: **open — study M1 tasked.**
+- Status: **open. M1 complete — magnetism NOT SUPPORTED (0/18 cells);
+  see `reports/dev/M1_ADJUDICATION.md`. M-02 tasked: temporal robustness
+  of the post-hoc anti-magnetism observation (Part A) + frozen M2
+  post-sweep design (Part B).**
+- **Rule addendum (2026-07-03, prospective)**: a downward CI exclusion
+  replicated on ≥ 2/3 datasets supports the anti-claim, symmetric to the
+  upward rule. Adopted after M1's inverse observation was seen, so that
+  observation stays labeled post-hoc until the M-02 Part A split rules
+  on it.
 - Relationship to the concluded trading program: none of these studies
   makes a trading claim. They test the *descriptive* propositions the
   folklore rests on, as event studies against matched controls, on the
