@@ -138,7 +138,7 @@ let tfi = baseTfIdx;
 let view = {i0: 0, n: 180};
 let revealTs = base.ts[base.ts.length - 1];
 let hoverI = -1, playing = false, lastFrame = 0, follow = true;
-const layers = {fvg:true, ob:true, pool:true, swing:false, ev:true, kz:true, news:true, trade:true};
+const layers = {fvg:true, ob:true, pool:true, swing:false, ev:true, kz:true, news:true, trade:true, hist:false};
 
 const tf = () => B.tfs[tfi];
 function ub(a, x){ let lo=0, hi=a.length; while(lo<hi){const m=(lo+hi)>>1; if(a[m]<=x) lo=m+1; else hi=m;} return lo; }
@@ -216,11 +216,12 @@ function draw(){
     const invStart = (inv!==-1 && inv<=r) ? inv : -1;
     const baseEnd = invStart!==-1 ? Math.min(invStart, zEnd) : zEnd;
     const dead = (fill!==-1 && fill<=r) || invStart!==-1;
-    if (baseEnd >= a && i <= b)
-      zone(i, baseEnd, lo, hi, dir>0?COL.up:COL.dn, dead?.04:.12, dir>0?"FVG+":"FVG−", dead);
+    if (baseEnd >= a && i <= b && (!dead || layers.hist))
+      zone(i, baseEnd, lo, hi, dir>0?COL.up:COL.dn, dead?.05:.12, dir>0?"FVG+":"FVG−", dead);
     if (invStart!==-1){ const e2 = endAt(invFail, invStart, EXT.fvg);
       const invDead = invFail!==-1 && invFail<=r;
-      if (e2 >= invStart) zone(invStart, e2, lo, hi, COL.inv, invDead?.05:.14, "IFVG", invDead); }
+      if (e2 >= invStart && (!invDead || layers.hist))
+        zone(invStart, e2, lo, hi, COL.inv, invDead?.06:.14, "IFVG", invDead); }
   }
   // Order blocks
   if (layers.ob) for (const o of t.ob){
@@ -228,7 +229,8 @@ function draw(){
     if (vis > r) continue;
     const e = endAt(invd, i, EXT.ob);
     const dead = invd!==-1 && invd<=r;
-    if (e >= a && i <= b){ zone(i, e, lo, hi, COL.ob, dead?.04:.12, dir>0?"OB+":"OB−", dead);
+    if (dead && !layers.hist) continue;
+    if (e >= a && i <= b){ zone(i, e, lo, hi, COL.ob, dead?.05:.12, dir>0?"OB+":"OB−", dead);
       if (invd!==-1 && invd<=r) lbl("✕", xC(invd)-3, yP((lo+hi)/2)+3, COL.ob); }
   }
   // Liquidity pools
@@ -238,6 +240,13 @@ function draw(){
     const e = endAt(taken, first, EXT.pool);
     if (e < a || first > b) continue;
     const pdead = taken!==-1 && taken<=r;
+    if (pdead && !layers.hist){
+      // resolved liquidity leaves the chart; keep only the recent purge marker
+      if (kind && taken > r - 80 && taken >= a && taken <= b)
+        lbl(kind===1?"⤺ sweep":"→ run", xC(taken)-14, yP(level)+(side>0?-6:13),
+            kind===1?COL.inv:COL.ink2);
+      continue;
+    }
     ctx.globalAlpha = pdead ? .35 : 1;
     ctx.strokeStyle = COL.liq; ctx.setLineDash([5,4]); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(xC(first), yP(level)+.5); ctx.lineTo(xC(e), yP(level)+.5); ctx.stroke();
@@ -440,7 +449,7 @@ B.tfs.forEach((t, i) => {
 });
 const chipDefs = [["fvg","FVG / IFVG",COL.up],["ob","Order blocks",COL.ob],["pool","Liquidity",COL.liq],
                   ["ev","BOS / MSS",COL.ink2],["swing","Swings",COL.ink3],["kz","Killzones","rgba(91,141,239,.8)"],
-                  ["news","News",COL.dn],["trade","Trades",COL.up]];
+                  ["news","News",COL.dn],["trade","Trades",COL.up],["hist","History",COL.ink3]];
 const chipBox = el("layerChips");
 for (const [key,name,col] of chipDefs){
   const b = document.createElement("button");
