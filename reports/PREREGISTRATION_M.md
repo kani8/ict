@@ -2,9 +2,11 @@
 
 - Date: 2026-07-03
 - Status: **open. M1 complete — magnetism NOT SUPPORTED (0/18 cells);
-  see `reports/dev/M1_ADJUDICATION.md`. M-02 tasked: temporal robustness
-  of the post-hoc anti-magnetism observation (Part A) + frozen M2
-  post-sweep design (Part B).**
+  see `reports/dev/M1_ADJUDICATION.md`. M-02 Part A complete:
+  **anti-magnetism at 2.0–4.0 ATR / h=96 CONFIRMED** (ES+ETH both
+  halves; BTC fails; 2/3 rule met — `reports/dev/M2_PARTA_ADJUDICATION.md`).
+  Part B (post-sweep direction + volatility) tasked on
+  `analytics/sweep_study.py`.**
 - **Rule addendum (2026-07-03, prospective)**: a downward CI exclusion
   replicated on ≥ 2/3 datasets supports the anti-claim, symmetric to the
   upward rule. Adopted after M1's inverse observation was seen, so that
