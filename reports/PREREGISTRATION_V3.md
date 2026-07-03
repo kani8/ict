@@ -1,9 +1,10 @@
 # Preregistration — Study V3 "Origin": narrative-engine bias
 
 - Date: 2026-07-02
-- Status: **crypto track CLOSED at development (2026-07-02) — stop
-  condition met; holdouts never touched. Index track (ES) is the sole
-  open line.** See the change log below and
+- Status: **CONCLUDED (2026-07-03). Crypto track closed at development;
+  ES track closed at development (Iteration 04: separation absent or
+  inverted on 16y of ES). See `reports/PROGRAM_CONCLUSION.md`. All
+  holdouts sealed, never touched.** See the change log below and
   `reports/dev/V3_ITER03_ADJUDICATION.md`. This study originates its own
   mechanization of HTF narrative formation rather than testing ICT's
   canonical composition (V1: failed, concluded; V2.1: frozen, holdout

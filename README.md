@@ -12,7 +12,19 @@ sources of backtest deception: lookahead bias, intrabar wishful thinking, and
 ignored costs. No finite harness rules out every artifact; this one makes the
 known ones testable.
 
-## 🛑 FINAL VERDICT (2026-07-01): FAILED CONFIRMATION — research concluded
+## 🛑 PROGRAM CONCLUDED (2026-07-03): four tests, one answer
+
+The full program — canonical ICT (V1), maximum-faithfulness (V2.1,
+retired), and the narrative engine on crypto and on 16 years of ES
+futures (V3) — found **no positive edge anywhere, and consistent
+sign-inversion where any signal existed** (higher mechanized SMC
+conviction → lower forward return, monotone on ETH and ES). Full record:
+[`reports/PROGRAM_CONCLUSION.md`](reports/PROGRAM_CONCLUSION.md). All
+five holdout datasets remain sealed and unspent. The harness, the
+statistics, and the replay UI survive for future, separately
+preregistered programs.
+
+## FINAL VERDICT (2026-07-01): V1 FAILED CONFIRMATION — concluded
 
 The preregistered stopping rule has fired. The frozen specification
 (`543ec12`) was run once on the untouched ETHUSDT holdout with 1m execution
