@@ -8,8 +8,12 @@ from .significance import (
 )
 from .report import render_report
 from .diagnostics import forward_return_table, render_forward_table
+from .session_study import render_session_battery, run_session_battery, session_table
 
 __all__ = [
+    "session_table",
+    "run_session_battery",
+    "render_session_battery",
     "compute_metrics",
     "Metrics",
     "bootstrap_ci",

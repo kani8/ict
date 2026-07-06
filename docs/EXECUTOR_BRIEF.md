@@ -7,16 +7,18 @@ is fidelity and observation, not improvisation.
 
 ## Repository state you must respect
 
-- Branch: `claude/smc-trading-strategy-e31is5`.
-- **Study V1** is concluded: `reports/FINAL_VERDICT.md`. Never re-run or
-  tune it.
-- **Study V2.1** is frozen: `reports/PREREGISTRATION_V2.md`. Its holdouts
-  (SOLUSDT 2023–2026, BTCUSDT 2019–2022) are reserved; touch them only if
-  explicitly instructed to execute the V2.1 confirmation, once.
-- **Study V3** is in development: `reports/PREREGISTRATION_V3.md`.
-  Development data = BTCUSDT and ETHUSDT 2023–2026 only (burned sets).
-  V3 holdouts (BNBUSDT 2023–2026, ETHUSDT 2019–2022) are untouchable
-  until the architect declares a freeze commit.
+- Branch: `claude/trading-strategy-research-hacbsb`.
+- **The SMC/ICT trading program (V1/V2.1/V3) is concluded**:
+  `reports/PROGRAM_CONCLUSION.md`. Never re-run, tune, or extend it.
+  Its crypto holdouts (BNBUSDT 2023–2026, ETHUSDT 2019–2022, SOLUSDT
+  2023–2026, BTCUSDT 2019–2022) are permanently sealed.
+- **Measurement program M** is open (`reports/PREREGISTRATION_M.md`):
+  M1 and M2 complete, M3 not yet tasked. Burned data only.
+- **Program S** (session anomalies on index futures) is open:
+  `reports/PREREGISTRATION_S.md` is binding. Development data = burned
+  ES 2010–2026 only. The S holdout is NQ 2010–2026 (formally
+  re-consecrated for S): fetched only at Stage 3, once, at the frozen
+  commit — until then it remains untouchable like every other holdout.
 
 ## Hard rules
 
@@ -29,9 +31,10 @@ is fidelity and observation, not improvisation.
    check" any reserved holdout dataset. Doing so burns it and the
    architect cannot un-burn it.
 3. **Verify before running.** Fresh clone → `uv sync --extra dev --extra
-   fetch` → `uv run pytest -q` must pass 99/99 and `uv run ruff check src
-   tests` must be clean at the pinned commit before any experiment. If
-   not, stop and report; do not fix.
+   fetch` → `uv run pytest -q` must pass with zero failures (138 tests
+   as of Program S Stage 1; the tasking doc states the expected count)
+   and `uv run ruff check src tests` must be clean at the pinned commit
+   before any experiment. If not, stop and report; do not fix.
 4. **Report anomalies, don't patch them.** Data gaps, OHLC violations,
    suspiciously good results (possible leakage), test flakes — describe
    them and stop the affected run. A too-good result is a bug until the

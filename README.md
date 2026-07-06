@@ -12,7 +12,24 @@ sources of backtest deception: lookahead bias, intrabar wishful thinking, and
 ignored costs. No finite harness rules out every artifact; this one makes the
 known ones testable.
 
-## 🛑 PROGRAM CONCLUDED (2026-07-03): four tests, one answer
+## ▶️ PROGRAM S OPEN (2026-07-06): session anomalies on index futures
+
+A new preregistered program, built from *externally documented* edges
+rather than trading folklore: market intraday momentum (Gao/Han/Li/Zhou
+JFE 2018; Baltussen/Da/Lammers/Martens JFE 2021), opening-range
+breakout, pre-FOMC drift, and IBS mean reversion, tested on the burned
+16-year ES sample with NQ 2010–2026 formally re-consecrated as the
+one-shot holdout. Literature review: [`docs/RESEARCH_S1.md`](docs/RESEARCH_S1.md).
+Binding protocol and decision rules:
+[`reports/PREREGISTRATION_S.md`](reports/PREREGISTRATION_S.md). Stage-1
+executor tasking: [`reports/dev/S_ITER01_TASK.md`](reports/dev/S_ITER01_TASK.md).
+New code: `analytics/session_study.py` (per-session anchor table + the
+five-study battery) and `strategy/sessions.py`
+(`IntradayMomentumStrategy`, `OpeningRangeBreakoutStrategy`, config in
+[`configs/s1_sessions.toml`](configs/s1_sessions.toml)), both covered by
+unit tests and the prefix-consistency no-lookahead proof.
+
+## 🛑 SMC/ICT PROGRAM CONCLUDED (2026-07-03): four tests, one answer
 
 The full program — canonical ICT (V1), maximum-faithfulness (V2.1,
 retired), and the narrative engine on crypto and on 16 years of ES

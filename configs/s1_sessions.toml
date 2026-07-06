@@ -1,0 +1,21 @@
+# Program S session-anomaly strategies (reports/PREREGISTRATION_S.md).
+# All keys map 1:1 to ict_backtest.strategy.SessionConfig fields.
+
+[session]
+tz = "America/New_York"
+atr_period = 14
+risk_pct = 1.0
+max_leverage = 5.0
+
+# S1 — intraday momentum (last half hour)
+im_predictor = "both"     # "fh" | "rod" | "both" (signs must agree)
+im_min_abs_signal = 0.0   # min |rest-of-day logret|; 0 = trade any nonzero signal
+im_stop_atr = 3.0         # protective stop (R basis); papers trade stopless
+
+# S2 — 30-minute opening-range breakout
+orb_stop_mode = "range"   # "range" (opposite extreme) | "atr"
+orb_stop_atr = 2.0
+orb_take_profit_r = 0.0   # 0 = no target, exit at the close
+orb_entry_cutoff_minute = 900   # cancel unfilled entries at 15:00 ET
+orb_min_range_atr = 0.0
+orb_max_range_atr = 0.0

@@ -52,6 +52,33 @@ ET_BY_NAME = {
 }
 
 
+# ---------------------------------------------------------------------------
+# US index RTH session anchors (Program S). 15m bar timestamps = bar OPEN;
+# a bar opening at 09:30 ET is minute 570 and closes 09:45.
+# ---------------------------------------------------------------------------
+
+RTH_OPEN = 570      # 09:30 bar — session open
+RTH_FH_END = 585    # 09:45 bar — closes 10:00, end of the first half hour
+RTH_1400 = 825      # 13:45 bar — closes 14:00 (FOMC announcement anchor)
+RTH_ROD_END = 915   # 15:15 bar — closes 15:30, end of "rest of day"
+RTH_LAST = 930      # 15:30 bar — the last-half-hour window opens here
+RTH_CLOSE = 945     # 15:45 bar — closes 16:00, the RTH close
+
+
+def et_minutes_days(ts: np.ndarray, tz: str = "America/New_York") -> tuple[np.ndarray, np.ndarray]:
+    """Per-bar ET minute-of-day and ET calendar-day key (YYYYMMDD int).
+
+    Uses only the bar-open timestamp, which is known before the bar
+    exists — safe for both studies and live strategies.  DST-correct.
+    """
+    import pandas as pd
+
+    idx = pd.to_datetime(ts, unit="s", utc=True).tz_convert(tz)
+    minute = (idx.hour * 60 + idx.minute).to_numpy(dtype=np.int64)
+    day = (idx.year * 10_000 + idx.month * 100 + idx.day).to_numpy(dtype=np.int64)
+    return minute, day
+
+
 def in_killzone(ts: np.ndarray, killzones: list[Killzone], tz: str = "UTC") -> np.ndarray:
     """Boolean mask over bars whose open timestamp falls in any killzone.
 
