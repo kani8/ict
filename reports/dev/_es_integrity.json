@@ -1,0 +1,645 @@
+{
+  "es_1m_adjusted": {
+    "ts": {
+      "n_rows": 5615435,
+      "first_ts": "2010-06-06T22:00:00Z",
+      "last_ts": "2026-07-01T23:59:00Z",
+      "monotonic_increasing": true,
+      "n_duplicate_ts": 0,
+      "n_backsteps": 0
+    },
+    "ohlc": {
+      "n_high_lt_maxoc": 0,
+      "n_low_gt_minoc": 0,
+      "n_high_lt_low": 0,
+      "n_open_le_0": 0,
+      "n_high_le_0": 0,
+      "n_low_le_0": 0,
+      "n_close_le_0": 0,
+      "n_volume_lt_0": 0,
+      "min_low": 1600.25,
+      "max_high": 7697.0,
+      "min_close": 1601.25,
+      "max_close": 7696.25
+    },
+    "gaps": {
+      "step_s": 60,
+      "n_gaps_gt_1step": 33587,
+      "weekend": 844,
+      "daily_halt": 2689,
+      "holiday_or_earlyclose": 12,
+      "other": 30042,
+      "other_examples": [
+        {
+          "after_bar_et": "2010-06-07 16:14",
+          "gap_minutes": 16.0,
+          "weekday": 0
+        },
+        {
+          "after_bar_et": "2010-06-07 17:29",
+          "gap_minutes": 31.0,
+          "weekday": 0
+        },
+        {
+          "after_bar_et": "2010-06-07 19:09",
+          "gap_minutes": 2.0,
+          "weekday": 0
+        },
+        {
+          "after_bar_et": "2010-06-07 19:25",
+          "gap_minutes": 2.0,
+          "weekday": 0
+        },
+        {
+          "after_bar_et": "2010-06-08 16:14",
+          "gap_minutes": 16.0,
+          "weekday": 1
+        },
+        {
+          "after_bar_et": "2010-06-08 17:29",
+          "gap_minutes": 31.0,
+          "weekday": 1
+        },
+        {
+          "after_bar_et": "2010-06-09 16:14",
+          "gap_minutes": 16.0,
+          "weekday": 2
+        },
+        {
+          "after_bar_et": "2010-06-09 17:29",
+          "gap_minutes": 31.0,
+          "weekday": 2
+        },
+        {
+          "after_bar_et": "2010-06-09 19:09",
+          "gap_minutes": 2.0,
+          "weekday": 2
+        },
+        {
+          "after_bar_et": "2010-06-10 16:14",
+          "gap_minutes": 16.0,
+          "weekday": 3
+        },
+        {
+          "after_bar_et": "2010-06-10 16:50",
+          "gap_minutes": 2.0,
+          "weekday": 3
+        },
+        {
+          "after_bar_et": "2010-06-10 17:02",
+          "gap_minutes": 2.0,
+          "weekday": 3
+        }
+      ]
+    },
+    "bars_per_year": {
+      "step_s": 60,
+      "elapsed_years": 16.0687,
+      "observed_bars": 5615435,
+      "bars_per_year_observed": 349464.8,
+      "note": "observed excludes weekends/halts/holidays; use observed for --bars-per-year"
+    }
+  },
+  "es_1m_raw": {
+    "ts": {
+      "n_rows": 5615435,
+      "first_ts": "2010-06-06T22:00:00Z",
+      "last_ts": "2026-07-01T23:59:00Z",
+      "monotonic_increasing": true,
+      "n_duplicate_ts": 0,
+      "n_backsteps": 0
+    },
+    "ohlc": {
+      "n_high_lt_maxoc": 0,
+      "n_low_gt_minoc": 0,
+      "n_high_lt_low": 0,
+      "n_open_le_0": 0,
+      "n_high_le_0": 0,
+      "n_low_le_0": 0,
+      "n_close_le_0": 0,
+      "n_volume_lt_0": 0,
+      "min_low": 1002.75,
+      "max_high": 7636.75,
+      "min_close": 1003.75,
+      "max_close": 7635.0
+    }
+  },
+  "es_15m_adjusted": {
+    "ts": {
+      "n_rows": 376768,
+      "first_ts": "2010-06-06T22:00:00Z",
+      "last_ts": "2026-07-01T23:45:00Z",
+      "monotonic_increasing": true,
+      "n_duplicate_ts": 0,
+      "n_backsteps": 0
+    },
+    "ohlc": {
+      "n_high_lt_maxoc": 0,
+      "n_low_gt_minoc": 0,
+      "n_high_lt_low": 0,
+      "n_open_le_0": 0,
+      "n_high_le_0": 0,
+      "n_low_le_0": 0,
+      "n_close_le_0": 0,
+      "n_volume_lt_0": 0,
+      "min_low": 1600.25,
+      "max_high": 7697.0,
+      "min_close": 1601.75,
+      "max_close": 7693.0
+    },
+    "gaps": {
+      "step_s": 900,
+      "n_gaps_gt_1step": 6595,
+      "weekend": 844,
+      "daily_halt": 3170,
+      "holiday_or_earlyclose": 12,
+      "other": 2569,
+      "other_examples": [
+        {
+          "after_bar_et": "2010-06-07 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 0
+        },
+        {
+          "after_bar_et": "2010-06-08 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 1
+        },
+        {
+          "after_bar_et": "2010-06-09 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 2
+        },
+        {
+          "after_bar_et": "2010-06-10 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 3
+        },
+        {
+          "after_bar_et": "2010-06-14 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 0
+        },
+        {
+          "after_bar_et": "2010-06-15 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 1
+        },
+        {
+          "after_bar_et": "2010-06-17 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 3
+        },
+        {
+          "after_bar_et": "2010-06-21 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 0
+        },
+        {
+          "after_bar_et": "2010-06-22 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 1
+        },
+        {
+          "after_bar_et": "2010-06-23 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 2
+        },
+        {
+          "after_bar_et": "2010-06-24 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 3
+        },
+        {
+          "after_bar_et": "2010-06-28 16:00",
+          "gap_minutes": 30.0,
+          "weekday": 0
+        }
+      ]
+    },
+    "bars_per_year": {
+      "step_s": 900,
+      "elapsed_years": 16.0686,
+      "observed_bars": 376768,
+      "bars_per_year_observed": 23447.4,
+      "note": "observed excludes weekends/halts/holidays; use observed for --bars-per-year"
+    }
+  },
+  "reconcile_15m_vs_1m": {
+    "n_15m_file": 376768,
+    "n_15m_recalc": 376768,
+    "n_matched_buckets": 376768,
+    "max_abs_diff_open": 0.0,
+    "n_mismatch_open": 0,
+    "max_abs_diff_high": 0.0,
+    "n_mismatch_high": 0,
+    "max_abs_diff_low": 0.0,
+    "n_mismatch_low": 0,
+    "max_abs_diff_close": 0.0,
+    "n_mismatch_close": 0,
+    "max_abs_diff_volume": 0.0,
+    "n_mismatch_volume": 0
+  },
+  "roll_continuity": {
+    "n_roll_boundaries_matched": 65,
+    "n_roll_boundaries_unmatched": 0,
+    "unmatched_effective_days": [],
+    "max_intraday_offset_wobble": 0.0,
+    "worst_offset_step_residual_vs_calendar": {
+      "residual": 0.0,
+      "effective_day": null
+    },
+    "per_roll": [
+      {
+        "effective_day": "2010-06-13",
+        "raw_gap": -4.5,
+        "offset_step_observed": -4.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2010-09-12",
+        "raw_gap": -4.75,
+        "offset_step_observed": -4.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2010-12-12",
+        "raw_gap": -5.0,
+        "offset_step_observed": -5.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2011-03-13",
+        "raw_gap": -5.0,
+        "offset_step_observed": -5.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2011-06-12",
+        "raw_gap": -5.25,
+        "offset_step_observed": -5.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2011-09-11",
+        "raw_gap": -5.75,
+        "offset_step_observed": -5.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2011-12-11",
+        "raw_gap": -6.0,
+        "offset_step_observed": -6.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2012-03-11",
+        "raw_gap": -5.5,
+        "offset_step_observed": -5.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2012-06-10",
+        "raw_gap": -6.25,
+        "offset_step_observed": -6.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2012-09-16",
+        "raw_gap": -7.0,
+        "offset_step_observed": -7.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2012-12-16",
+        "raw_gap": -5.75,
+        "offset_step_observed": -5.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2013-03-10",
+        "raw_gap": -5.25,
+        "offset_step_observed": -5.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2013-06-16",
+        "raw_gap": -5.75,
+        "offset_step_observed": -5.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2013-09-15",
+        "raw_gap": -6.75,
+        "offset_step_observed": -6.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2013-12-15",
+        "raw_gap": -5.75,
+        "offset_step_observed": -5.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2014-03-16",
+        "raw_gap": -7.0,
+        "offset_step_observed": -7.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2014-06-16",
+        "raw_gap": -7.0,
+        "offset_step_observed": -7.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2014-09-14",
+        "raw_gap": -8.25,
+        "offset_step_observed": -8.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2014-12-14",
+        "raw_gap": -7.0,
+        "offset_step_observed": -7.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2015-03-15",
+        "raw_gap": -7.5,
+        "offset_step_observed": -7.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2015-06-14",
+        "raw_gap": -8.75,
+        "offset_step_observed": -8.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2015-09-13",
+        "raw_gap": -9.75,
+        "offset_step_observed": -9.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2015-12-13",
+        "raw_gap": -8.25,
+        "offset_step_observed": -8.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2016-03-13",
+        "raw_gap": -9.25,
+        "offset_step_observed": -9.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2016-06-12",
+        "raw_gap": -8.75,
+        "offset_step_observed": -8.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2016-09-11",
+        "raw_gap": -6.75,
+        "offset_step_observed": -6.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2016-12-11",
+        "raw_gap": -5.25,
+        "offset_step_observed": -5.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2017-03-12",
+        "raw_gap": -3.0,
+        "offset_step_observed": -3.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2017-06-11",
+        "raw_gap": -2.75,
+        "offset_step_observed": -2.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2017-09-10",
+        "raw_gap": -1.5,
+        "offset_step_observed": -1.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2017-12-10",
+        "raw_gap": 3.0,
+        "offset_step_observed": 3.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2018-03-12",
+        "raw_gap": 5.5,
+        "offset_step_observed": 5.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2018-06-11",
+        "raw_gap": 4.0,
+        "offset_step_observed": 4.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2018-09-16",
+        "raw_gap": 5.25,
+        "offset_step_observed": 5.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2018-12-16",
+        "raw_gap": 3.25,
+        "offset_step_observed": 3.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2019-03-10",
+        "raw_gap": 5.0,
+        "offset_step_observed": 5.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2019-06-16",
+        "raw_gap": 4.5,
+        "offset_step_observed": 4.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2019-09-15",
+        "raw_gap": 2.5,
+        "offset_step_observed": 2.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2019-12-15",
+        "raw_gap": 3.5,
+        "offset_step_observed": 3.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2020-03-16",
+        "raw_gap": -12.0,
+        "offset_step_observed": -12.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2020-06-15",
+        "raw_gap": -11.0,
+        "offset_step_observed": -11.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2020-09-13",
+        "raw_gap": -10.25,
+        "offset_step_observed": -10.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2020-12-13",
+        "raw_gap": -7.25,
+        "offset_step_observed": -7.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2021-03-14",
+        "raw_gap": -8.75,
+        "offset_step_observed": -8.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2021-06-13",
+        "raw_gap": -9.0,
+        "offset_step_observed": -9.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2021-09-12",
+        "raw_gap": -9.0,
+        "offset_step_observed": -9.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2021-12-12",
+        "raw_gap": -7.5,
+        "offset_step_observed": -7.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2022-03-13",
+        "raw_gap": -9.0,
+        "offset_step_observed": -9.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2022-06-13",
+        "raw_gap": 1.0,
+        "offset_step_observed": 1.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2022-09-12",
+        "raw_gap": 17.75,
+        "offset_step_observed": 17.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2022-12-12",
+        "raw_gap": 32.5,
+        "offset_step_observed": 32.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2023-03-14",
+        "raw_gap": 31.25,
+        "offset_step_observed": 31.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2023-06-12",
+        "raw_gap": 43.75,
+        "offset_step_observed": 43.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2023-09-11",
+        "raw_gap": 49.25,
+        "offset_step_observed": 49.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2023-12-12",
+        "raw_gap": 52.75,
+        "offset_step_observed": 52.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2024-03-12",
+        "raw_gap": 62.75,
+        "offset_step_observed": 62.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2024-06-17",
+        "raw_gap": 64.5,
+        "offset_step_observed": 64.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2024-09-17",
+        "raw_gap": 61.25,
+        "offset_step_observed": 61.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2024-12-17",
+        "raw_gap": 72.75,
+        "offset_step_observed": 72.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2025-03-18",
+        "raw_gap": 52.0,
+        "offset_step_observed": 52.0,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2025-06-17",
+        "raw_gap": 53.5,
+        "offset_step_observed": 53.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2025-09-16",
+        "raw_gap": 57.25,
+        "offset_step_observed": 57.25,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2025-12-16",
+        "raw_gap": 57.75,
+        "offset_step_observed": 57.75,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2026-03-17",
+        "raw_gap": 50.5,
+        "offset_step_observed": 50.5,
+        "residual": 0.0
+      },
+      {
+        "effective_day": "2026-06-16",
+        "raw_gap": 64.75,
+        "offset_step_observed": 64.75,
+        "residual": 0.0
+      }
+    ]
+  }
+}
