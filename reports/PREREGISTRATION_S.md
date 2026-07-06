@@ -1,7 +1,14 @@
 # Preregistration — Program S: session anomalies on index futures
 
-- Date: 2026-07-06 (architect). Status: **open — Stage 1 tasked**
-  (`reports/dev/S_ITER01_TASK.md`).
+- Date: 2026-07-06 (architect). Status: **CONCLUDED 2026-07-06 — Stage-1
+  fail.** None of S1–S4 met its predeclared support rule on the burned
+  ES sample (all primary CIs straddle 0 on the full sample and both
+  halves; S3 also fails its 2× ratio bar). Per the stopping rule the
+  program concluded at Stage 1: Stage 2 never opened, no ablation was
+  run, and **NQ was never fetched — its re-consecration lapsed and it
+  returns to the sealed pool untouched.** Record:
+  `reports/dev/S_ITER01.md` + `reports/dev/S_ITER01_ADJUDICATION.md`.
+  Nothing below this line was modified after the Stage-1 run.
 - Hypothesis sources: external literature only
   (`docs/RESEARCH_S1.md`). No hypothesis in this program derives from
   the concluded SMC/ICT program or from program M's findings; M's

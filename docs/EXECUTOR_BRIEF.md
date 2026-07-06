@@ -14,11 +14,11 @@ is fidelity and observation, not improvisation.
   2023–2026, BTCUSDT 2019–2022) are permanently sealed.
 - **Measurement program M** is open (`reports/PREREGISTRATION_M.md`):
   M1 and M2 complete, M3 not yet tasked. Burned data only.
-- **Program S** (session anomalies on index futures) is open:
-  `reports/PREREGISTRATION_S.md` is binding. Development data = burned
-  ES 2010–2026 only. The S holdout is NQ 2010–2026 (formally
-  re-consecrated for S): fetched only at Stage 3, once, at the frozen
-  commit — until then it remains untouchable like every other holdout.
+- **Program S** (session anomalies on index futures) is **concluded**
+  (2026-07-06, Stage-1 fail): `reports/dev/S_ITER01_ADJUDICATION.md`.
+  Never re-run or tune it. NQ 2010–2026 was never fetched; its S
+  re-consecration lapsed and it is sealed again like every other
+  holdout.
 
 ## Hard rules
 

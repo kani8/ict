@@ -12,22 +12,27 @@ sources of backtest deception: lookahead bias, intrabar wishful thinking, and
 ignored costs. No finite harness rules out every artifact; this one makes the
 known ones testable.
 
-## ▶️ PROGRAM S OPEN (2026-07-06): session anomalies on index futures
+## 🛑 PROGRAM S CONCLUDED (2026-07-06): the published session anomalies are sub-costs residues on ES
 
-A new preregistered program, built from *externally documented* edges
-rather than trading folklore: market intraday momentum (Gao/Han/Li/Zhou
-JFE 2018; Baltussen/Da/Lammers/Martens JFE 2021), opening-range
-breakout, pre-FOMC drift, and IBS mean reversion, tested on the burned
-16-year ES sample with NQ 2010–2026 formally re-consecrated as the
-one-shot holdout. Literature review: [`docs/RESEARCH_S1.md`](docs/RESEARCH_S1.md).
-Binding protocol and decision rules:
-[`reports/PREREGISTRATION_S.md`](reports/PREREGISTRATION_S.md). Stage-1
-executor tasking: [`reports/dev/S_ITER01_TASK.md`](reports/dev/S_ITER01_TASK.md).
-New code: `analytics/session_study.py` (per-session anchor table + the
-five-study battery) and `strategy/sessions.py`
-(`IntradayMomentumStrategy`, `OpeningRangeBreakoutStrategy`, config in
-[`configs/s1_sessions.toml`](configs/s1_sessions.toml)), both covered by
-unit tests and the prefix-consistency no-lookahead proof.
+A preregistered program built from *externally documented* edges rather
+than trading folklore — market intraday momentum (Gao/Han/Li/Zhou JFE
+2018; Baltussen/Da/Lammers/Martens JFE 2021), opening-range breakout,
+pre-FOMC drift (Lucca & Moench JF 2015), IBS mean reversion — tested on
+the burned 16-year ES sample (~4,000 sessions). **Stage-1 verdict: none
+of the four support rules was met.** Every effect carries the
+literature-predicted sign at +0.5–2 bp/day, every 95% CI straddles
+zero, and the engine's ES round-trip cost (~1.4 bp) exceeds the largest
+primary mean. The one positive full-sample cell (intraday momentum on
+high-vol days, +2.0 bp) is exploratory, fails both temporal halves, and
+fades post-2020. Per the stopping rule the program concluded at Stage 1;
+the strategies were never run on real data and **NQ was never fetched**
+(its re-consecration lapsed unused). Record:
+[`docs/RESEARCH_S1.md`](docs/RESEARCH_S1.md) ·
+[`reports/PREREGISTRATION_S.md`](reports/PREREGISTRATION_S.md) ·
+[`reports/dev/S_ITER01.md`](reports/dev/S_ITER01.md) ·
+[`reports/dev/S_ITER01_ADJUDICATION.md`](reports/dev/S_ITER01_ADJUDICATION.md).
+The tested library code survives (`analytics/session_study.py`,
+`strategy/sessions.py`) for future, separately preregistered programs.
 
 ## 🛑 SMC/ICT PROGRAM CONCLUDED (2026-07-03): four tests, one answer
 
