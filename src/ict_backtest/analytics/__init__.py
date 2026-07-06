@@ -9,8 +9,15 @@ from .significance import (
 from .report import render_report
 from .diagnostics import forward_return_table, render_forward_table
 from .session_study import render_session_battery, run_session_battery, session_table
+from .trend_study import portfolio_rows, render_trend_battery, tsmom_rows
+from .portfolio import combine_portfolio, render_portfolio
 
 __all__ = [
+    "tsmom_rows",
+    "portfolio_rows",
+    "render_trend_battery",
+    "combine_portfolio",
+    "render_portfolio",
     "session_table",
     "run_session_battery",
     "render_session_battery",

@@ -19,6 +19,11 @@ is fidelity and observation, not improvisation.
   Never re-run or tune it. NQ 2010–2026 was never fetched; its S
   re-consecration lapsed and it is sealed again like every other
   holdout.
+- **Program T** (diversified time-series momentum) is open:
+  `reports/PREREGISTRATION_T.md` is binding. Development markets =
+  ES/CL/GC/ZN/6E daily, 2010–2026 (burned on first contact). Holdout
+  instruments **HG, ZF, 6J, ZC** are sealed until a Stage-3 freeze;
+  NQ remains sealed and is not part of Program T in any role.
 
 ## Hard rules
 

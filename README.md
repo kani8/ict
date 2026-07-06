@@ -12,6 +12,26 @@ sources of backtest deception: lookahead bias, intrabar wishful thinking, and
 ignored costs. No finite harness rules out every artifact; this one makes the
 known ones testable.
 
+## ▶️ PROGRAM T OPEN (2026-07-06): diversified time-series momentum
+
+The intraday programs all died to the same number — effects smaller
+than the ~1.4 bp round trip. Program T moves to the strategy family
+whose economics invert that ratio: **Moskowitz/Ooi/Pedersen time-series
+momentum with volatility targeting, diversified across five GLBX
+markets** (ES/CL/GC/ZN/6E dev; HG/ZF/6J/ZC sealed as the
+instrument-axis holdout), holding weeks-to-months so costs are noise.
+The deepest evidence base of any systematic strategy (JFE 2012, a
+century of evidence, +27% SG Trend in 2022) *and* documented
+post-2010 decay — both designed for. Evidence review:
+[`docs/RESEARCH_T.md`](docs/RESEARCH_T.md). Binding protocol:
+[`reports/PREREGISTRATION_T.md`](reports/PREREGISTRATION_T.md). Stage-1
+tasking: [`reports/dev/T_ITER01_TASK.md`](reports/dev/T_ITER01_TASK.md).
+New code: `analytics/trend_study.py` (signal battery + circular
+shift-null), `strategy/tsmom.py` (vol-targeted TSMOM),
+`analytics/portfolio.py` (multi-instrument aggregation), config in
+[`configs/t1_trend.toml`](configs/t1_trend.toml) — tested, incl.
+prefix-consistency no-lookahead proofs.
+
 ## 🛑 PROGRAM S CONCLUDED (2026-07-06): the published session anomalies are sub-costs residues on ES
 
 A preregistered program built from *externally documented* edges rather

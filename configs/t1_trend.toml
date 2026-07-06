@@ -1,0 +1,10 @@
+# Program T trend-following strategy (reports/PREREGISTRATION_T.md).
+# All keys map 1:1 to ict_backtest.strategy.TrendConfig fields.
+
+[trend]
+lookbacks = [21, 63, 252]   # majority vote of trailing-return signs (MOP-style)
+vol_lookback = 63           # trailing window for realized vol
+vol_target = 0.10           # annualized per-instrument volatility target
+max_leverage = 4.0          # cap on notional / equity
+rebalance_band = 0.25       # re-trade only when target notional drifts > 25%
+periods_per_year = 252
