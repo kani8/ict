@@ -1,0 +1,31 @@
+{
+  "generated": "2026-07-06T18:48:38.200670+00:00",
+  "source": "data/es_15m.parquet",
+  "source_sha256": "a3fc183db2a464410d54b9ce6fab442cacbf1ac390a99515a23efc1b38cdd478",
+  "method": "resample es_15m -> 1d, CME session (America/Chicago +7h date), ts=midnight-UTC settlement date; NO re-stitch",
+  "rows": 4137,
+  "date_first": "2010-06-07",
+  "date_last": "2026-07-01",
+  "duplicates": 0,
+  "ohlc_violations": 0,
+  "nonpositive_prices": 0,
+  "min_close": 1609.5,
+  "max_close": 7693.0,
+  "recon_20day_mismatches": 0,
+  "dropped_weekend_sessions": [
+    "2014-05-25",
+    "2018-08-05"
+  ],
+  "dropped_out_of_window_sessions": [
+    "2026-07-02"
+  ],
+  "thin_sessions_kept": {
+    "2012-12-26": 44,
+    "2013-01-02": 44,
+    "2013-12-26": 44,
+    "2014-01-02": 44,
+    "2014-09-26": 39,
+    "2025-11-28": 34
+  },
+  "out_sha256": "6527324697558f1c08851a2a4a18a86c86c4139113b1dadbb975a1fbb4488d2b"
+}
