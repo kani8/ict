@@ -15,7 +15,7 @@ from pathlib import Path
 from .analytics import compute_metrics, matched_baseline_test, render_report
 from .data import load_candles, synthetic_candles
 from .engine import Backtester, CostModel
-from .strategy import SMCConfig, SMCStrategy
+from .strategy import CATConfig, CATStrategy, SMCConfig, SMCStrategy
 
 
 def _cmd_fetch(args: argparse.Namespace) -> int:
@@ -39,26 +39,32 @@ def _cmd_synth(args: argparse.Namespace) -> int:
 
 def _cmd_run(args: argparse.Namespace) -> int:
     candles = load_candles(args.data, start=args.start, end=args.end)
-    config = SMCConfig.from_toml(args.config) if args.config else SMCConfig()
     cost = CostModel(spread_bps=args.spread_bps, commission_bps=args.commission_bps,
                      slippage_bps=args.slippage_bps)
     intrabar = load_candles(args.intrabar_data, start=args.start, end=args.end) \
         if args.intrabar_data else None
     backtester = Backtester(cost=cost, initial_equity=args.equity,
                             intrabar_policy=args.intrabar_policy, intrabar=intrabar)
-    strategy = SMCStrategy(candles, config)
+    if args.strategy == "cat":
+        config = CATConfig.from_toml(args.config) if args.config else CATConfig()
+        strategy = CATStrategy(candles, config)
+        eligible = strategy.eligible_mask
+    else:
+        config = SMCConfig.from_toml(args.config) if args.config else SMCConfig()
+        strategy = SMCStrategy(candles, config)
+        eligible = strategy.kz_mask
     result = backtester.run(candles, strategy)
     metrics = compute_metrics(result, bars_per_year=args.bars_per_year)
 
     baseline = None
     if args.validate:
         baseline = matched_baseline_test(candles, result, backtester,
-                                         eligible_mask=strategy.kz_mask, n_sims=args.validate,
+                                         eligible_mask=eligible, n_sims=args.validate,
                                          risk_pct=config.risk_pct,
                                          max_leverage=config.max_leverage)
 
     report = render_report(result, metrics, baseline,
-                           title=f"SMC Backtest — {Path(args.data).stem}")
+                           title=f"{args.strategy.upper()} Backtest — {Path(args.data).stem}")
     print(report)
     if args.report:
         Path(args.report).write_text(report)
@@ -101,8 +107,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", required=True)
     p.set_defaults(func=_cmd_synth)
 
-    p = sub.add_parser("run", help="run the SMC backtest")
+    p = sub.add_parser("run", help="run a strategy backtest")
     p.add_argument("--data", required=True)
+    p.add_argument("--strategy", choices=["smc", "cat"], default="smc",
+                   help="smc = ICT composition; cat = categorical trading")
     p.add_argument("--config", default=None)
     p.add_argument("--start", default=None)
     p.add_argument("--end", default=None)

@@ -286,6 +286,34 @@ in-sample); the untouched holdouts are BNBUSDT 2023–2026 and ETHUSDT
 2019–2022, one shot each after the freeze. SOL 2023–2026 and BTC
 2019–2022 stay reserved for V2.1.
 
+## Study CAT: "categorical trading" (new program, preregistered for ES)
+
+A separate, non-ICT program testing the **CAT (categorical trading)**
+approach: price action is categorized on a spectrum between
+*consolidation* (price more likely to stay where it has been → targets
+inside the traded range, never long the top / short the bottom) and
+*direction* (price more likely to reach a new area → trade with the
+trend, target beyond the range, stop inside), with bracket sizes scaled
+to the trailing average candle range and a default 1:1 risk-reward.
+Uncategorizable ("chaotic") action, unstable categories, and the bars
+after an outlier candle are no-trade by rule.
+
+- Implementation: [`strategy/cat.py`](src/ict_backtest/strategy/cat.py)
+  (claim-by-claim mapping from the source material in the module
+  docstring); config [`configs/cat_default.toml`](configs/cat_default.toml);
+  run with `ict-backtest run --strategy cat`.
+- Mechanics calibration (synthetic, not market evidence):
+  [`reports/CAT_STUDY.md`](reports/CAT_STUDY.md) — the strategy must
+  extract edge in a world with consolidation/direction regimes *by
+  construction* (`synthetic_cat_regimes`) and must find nothing on a
+  pure random walk.
+- ES status: **preregistered and frozen before any ES data contact**
+  ([`configs/cat_es.toml`](configs/cat_es.toml)). This environment holds
+  no ES data (the Databento export documented in
+  `reports/dev/V3_ITER04.md` is not present and market-data hosts are
+  network-blocked), so the one-shot confirmatory run is specified but
+  not yet executed.
+
 ## Testing on index futures / equities (ES, SPY, other high-liquidity markets)
 
 ICT's own teaching centers on ES/NQ futures and FX, so index markets are

@@ -1,0 +1,40 @@
+# CAT on ES futures (15m continuous back-adjusted contract).
+#
+# FROZEN BEFORE ES DATA CONTACT (2026-07-12): this container holds no ES
+# price data (data/es_15m.parquet from the Databento export documented in
+# reports/dev/V3_ITER04.md is not present and market-data hosts are
+# blocked by network policy), so these parameters are declared without
+# any index-futures feedback. Identical to cat_default.toml; the file
+# exists so the eventual ES run is preregistered and one command:
+#
+#   uv run ict-backtest run --strategy cat \
+#     --data data/es_15m.parquet --intrabar-data data/es_1m.parquet \
+#     --config configs/cat_es.toml \
+#     --spread-bps 0.4 --commission-bps 0.1 --slippage-bps 0.4 \
+#     --bars-per-year 23447.4 --validate 500 --report reports/cat_es.md
+#
+# Costs and bars-per-year follow the calibration recorded in
+# reports/dev/V3_ITER04.md (0.25-tick spread at ~6000, ~23h Globex).
+# Run it ONCE; the result stands regardless of sign.
+
+[strategy]
+regime_window = 24
+er_direction = 0.40
+er_consolidation = 0.15
+stability_bars = 4
+
+candle_size_window = 10
+bracket_frac = 0.5
+rr = 1.0
+
+avoid_extremes_frac = 0.25
+require_new_area = true
+require_stop_outside = false
+outlier_mult = 2.5
+outlier_skip_bars = 2
+
+risk_pct = 1.0
+max_leverage = 5.0
+exit_on_flip = false
+
+session_et = ""

@@ -1,0 +1,34 @@
+# CAT (categorical trading) — faithful defaults.
+#
+# Every value is either stated in the source material or is the author's
+# declared personal preference; see src/ict_backtest/strategy/cat.py for
+# the claim-by-claim mapping. Timeframe never appears here by design:
+# all distances are multiples of the trailing average candle range, which
+# is the approach's central "works on any timeframe" claim.
+
+[strategy]
+# categorization
+regime_window = 24          # trailing bars scored for consolidation vs direction
+er_direction = 0.40         # efficiency ratio >= this -> direction
+er_consolidation = 0.15     # efficiency ratio <= this -> consolidation
+stability_bars = 4          # category must hold this many closed bars
+
+# bracket sizing ("adjust the target and stop to the size of the candles")
+candle_size_window = 10
+bracket_frac = 0.5          # target ~ half the recent average candle range
+rr = 1.0                    # 1:1 risk-reward, his recommended starting point
+
+# entry filters
+avoid_extremes_frac = 0.25  # no longs in the top / shorts in the bottom quarter
+require_new_area = true     # direction targets must reach beyond the range
+require_stop_outside = false # true = textbook box drawing; false = his live play
+outlier_mult = 2.5
+outlier_skip_bars = 2
+
+# risk
+risk_pct = 1.0
+max_leverage = 5.0
+exit_on_flip = false
+
+# session (personal preference; his own is "09:33-09:50" ET)
+session_et = ""
