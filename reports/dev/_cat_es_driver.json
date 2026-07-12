@@ -1,0 +1,65 @@
+{
+  "invocation": "Python API equivalent of: uv run ict-backtest run --strategy cat --data data/es_15m.parquet --intrabar-data data/es_1m.parquet --config configs/cat_es.toml --spread-bps 0.4 --commission-bps 0.1 --slippage-bps 0.4 --bars-per-year 23447.4 --validate 500 --report reports/dev/CAT_ES_RUN.md",
+  "headline": {
+    "bars": 376768,
+    "trades": 47387,
+    "final_equity": 1.8687147242515017e-09,
+    "total_return_pct": -99.99999999999814,
+    "profit_factor": 0.6215139227003614,
+    "mean_r": -0.33922391444421746,
+    "mean_r_bootstrap": -0.33922391444421746,
+    "ci_lo": -0.3541742922708958,
+    "ci_hi": -0.3253036576704013,
+    "block_len": 36,
+    "max_drawdown_pct": -99.99999999999825,
+    "exposure_pct": 6.562924664515034,
+    "win_rate": 0.4646210986135438,
+    "sharpe": -10.892279246932402,
+    "sortino": -6.778994607692973,
+    "avg_holding_bars": 0.5218097790533268,
+    "median_holding_bars": 0.0
+  },
+  "rounded_cli_match": {
+    "trades": true,
+    "win_rate": true,
+    "profit_factor": true,
+    "mean_r": true,
+    "total_return_pct": true,
+    "max_drawdown_pct": true,
+    "exposure_pct": true
+  },
+  "per_leg": {
+    "cat_cons": {
+      "n": 41560,
+      "mean_r": -0.3458252619949382,
+      "win_rate": 0.46373917228103945
+    },
+    "cat_dir": {
+      "n": 5827,
+      "mean_r": -0.29214102372721834,
+      "win_rate": 0.4709112750986786
+    }
+  },
+  "skip_counts": {
+    "not_eligible_time": 0,
+    "no_category": 165593,
+    "unstable": 93875,
+    "outlier_blackout": 4994,
+    "no_candle_to_follow": 16752,
+    "extreme_entry_veto": 17006,
+    "target_not_inside": 2,
+    "target_not_new_area": 6345,
+    "stop_not_outside": 0,
+    "degenerate_range": 0,
+    "rejected_geometry": 62,
+    "category_disabled": 0,
+    "vol_out_of_band": 0,
+    "at_day_extreme": 0,
+    "daily_loss_stop": 0,
+    "max_trades_stop": 0
+  },
+  "exit_reasons": {
+    "sl": 24717,
+    "tp": 22670
+  }
+}

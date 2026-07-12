@@ -1,0 +1,28 @@
+{
+  "generated": "2026-07-03T00:03:53Z",
+  "source_csv_zst": "data/GLBX-20260702-TBF7DT8KTH/glbx-mdp3-20100606-20260701.ohlcv-1m.csv.zst",
+  "source_sha256": "e9ebda22332f27ed31a360bc9d8c8f6dba18f6bec916702ed3bab624b8691000",
+  "dataset_first": "2010-06-06T22:00:00Z",
+  "dataset_last": "2026-07-01T23:59:00Z",
+  "n_spread_rows": 866473,
+  "n_outright_rows": 7706583,
+  "n_unique_outright_iids": 68,
+  "n_continuous_1m_rows": 5615435,
+  "n_15m_rows": 376768,
+  "n_rolls": 65,
+  "back_adjust": "difference/additive (Panama); newest segment offset=0",
+  "files": {
+    "es_1m.parquet": {
+      "bytes": 75277168,
+      "sha256": "20998ac6b8c10a77c2789bce745cf5a5f4443a86bb360a00756dfcb7d53b7bc7"
+    },
+    "es_1m_raw.parquet": {
+      "bytes": 75632960,
+      "sha256": "00fc93c2524970747079c50c882024d2fccf2f5bd13965bca2f9ca0781c41753"
+    },
+    "es_15m.parquet": {
+      "bytes": 6571060,
+      "sha256": "a3fc183db2a464410d54b9ce6fab442cacbf1ac390a99515a23efc1b38cdd478"
+    }
+  }
+}
