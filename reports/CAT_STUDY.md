@@ -118,7 +118,7 @@ should produce. The implementation is clean.
 |---|---|---|---|
 | direction (`cat_dir`) | ~2,200–2,500 | **+0.50 to +0.54** | ~64% |
 | consolidation, `follow` mode (`cat_cons`) | ~3,800–3,900 | **−0.04 to −0.11** | ~41–43% |
-| consolidation, `fade` mode (separate run) | see `_cat_results.json` `fade_mode` | | |
+| consolidation, `fade` mode (separate run) | ~2,300–2,400 | **+0.035 to +0.046** | ~46% |
 
 An honest and instructive decomposition: in this world the entire edge
 comes from the **direction** leg. The author's own preferred
@@ -128,8 +128,13 @@ next move is anti-correlated with the last candle. (Notably, the author
 himself reports being unable to trade one of the two categories
 profitably and simply sitting it out; the data reproduces the
 experience that the two legs are different skills.) The `fade` variant
-he describes as "equally valid" trades the same segments in the
-opposite spirit; its numbers are in the results JSON alongside.
+he describes as "equally valid" flips the consolidation leg positive in
+this world (overall mean R +0.28 [CI ≈ 0.23–0.34] across seeds, vs
++0.13–0.18 for `follow`) — as expected, since fading is the optimal
+response to an Ornstein-Uhlenbeck segment *by construction*. That is a
+statement about this synthetic world, not a recommendation; the ES
+protocol below tests the frozen `follow` default, the author's own
+stated practice.
 
 ### Cost sensitivity — the quiet killer of half-candle brackets
 

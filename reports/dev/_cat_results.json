@@ -407,5 +407,133 @@
         "rejected_geometry": 0
       }
     }
+  },
+  "fade_mode": {
+    "1": {
+      "n_trades": 4657,
+      "total_return_pct": 30215.59216187477,
+      "win_rate": 0.5516426884260254,
+      "profit_factor": 1.712877861582795,
+      "mean_r": 0.2806665428360089,
+      "r_ci": [
+        0.23190869920211546,
+        0.32799587466929636
+      ],
+      "block_len": 17,
+      "p_return": 1.0,
+      "p_mean_r": 1.0,
+      "null_note": "",
+      "exposure_pct": 11.238584474885844,
+      "avg_holding_bars": 0.8456087610049388,
+      "by_tag": {
+        "cat_cons": {
+          "n": 2427,
+          "mean_r": 0.04065901963444473,
+          "win_rate": 0.46312319736299956
+        },
+        "cat_dir": {
+          "n": 2230,
+          "mean_r": 0.5418765243652448,
+          "win_rate": 0.647982062780269
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10901,
+        "unstable": 7047,
+        "outlier_blackout": 1225,
+        "no_candle_to_follow": 1785,
+        "extreme_entry_veto": 4527,
+        "target_not_inside": 0,
+        "target_not_new_area": 935,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    },
+    "2": {
+      "n_trades": 4718,
+      "total_return_pct": 39673.24248641285,
+      "win_rate": 0.5548961424332344,
+      "profit_factor": 1.728120761414977,
+      "mean_r": 0.2788230220598583,
+      "r_ci": [
+        0.2348762663262918,
+        0.3220009270104291
+      ],
+      "block_len": 17,
+      "p_return": 1.0,
+      "p_mean_r": 1.0,
+      "null_note": "",
+      "exposure_pct": 11.452625570776256,
+      "avg_holding_bars": 0.8505722763883001,
+      "by_tag": {
+        "cat_cons": {
+          "n": 2288,
+          "mean_r": 0.04552737114603187,
+          "win_rate": 0.46634615384615385
+        },
+        "cat_dir": {
+          "n": 2430,
+          "mean_r": 0.4984857583935352,
+          "win_rate": 0.6382716049382716
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10928,
+        "unstable": 6918,
+        "outlier_blackout": 1202,
+        "no_candle_to_follow": 1925,
+        "extreme_entry_veto": 4345,
+        "target_not_inside": 0,
+        "target_not_new_area": 965,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    },
+    "3": {
+      "n_trades": 4880,
+      "total_return_pct": 51983.25230410224,
+      "win_rate": 0.5584016393442623,
+      "profit_factor": 1.7777834262647638,
+      "mean_r": 0.28747194042677326,
+      "r_ci": [
+        0.23872789221092736,
+        0.3351185967412003
+      ],
+      "block_len": 17,
+      "p_return": 1.0,
+      "p_mean_r": 1.0,
+      "null_note": "",
+      "exposure_pct": 11.829337899543379,
+      "avg_holding_bars": 0.8493852459016393,
+      "by_tag": {
+        "cat_cons": {
+          "n": 2385,
+          "mean_r": 0.03523900002988279,
+          "win_rate": 0.4645702306079665
+        },
+        "cat_dir": {
+          "n": 2495,
+          "mean_r": 0.5285843904654841,
+          "win_rate": 0.6480961923847696
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10561,
+        "unstable": 6882,
+        "outlier_blackout": 1261,
+        "no_candle_to_follow": 1878,
+        "extreme_entry_veto": 4411,
+        "target_not_inside": 0,
+        "target_not_new_area": 996,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    }
   }
 }
