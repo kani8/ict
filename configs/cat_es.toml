@@ -39,3 +39,23 @@ max_leverage = 5.0
 exit_on_flip = false
 
 session_et = ""
+
+# --- Amendment 2026-07-12 (still before any ES data contact) ---------------
+# The author's journey retrospective surfaced additional mechanizable
+# elements (category toggles, volatility band, day-extreme veto, limit
+# execution, breakeven, daily-loss / trade-count stops). All are pinned
+# here at their NEUTRAL values: behavior is regression-verified identical
+# to the original freeze, so the preregistration is unchanged in substance.
+trade_consolidation = true
+trade_direction = true
+outlier_block_mode = "always"
+vol_ref_window = 0
+vol_band_low = 0.0
+vol_band_high = 0.0
+avoid_day_extreme_atr = 0.0
+entry_order = "market"
+limit_offset_frac = 0.0
+limit_expiry_bars = 3
+breakeven_r = 0.0
+max_daily_loss_r = 0.0
+max_trades_per_day = 0

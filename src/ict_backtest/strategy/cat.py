@@ -53,6 +53,42 @@ Personal-preference knobs (defaults = the author's stated practice):
 * ``avoid_extremes_frac`` — how much of the range edge is off-limits for
   with-candle consolidation entries (the "don't long the top" band).
 
+A second source — the author's trading-journey retrospective — adds the
+elements below.  Rules that are process/psychology (journaling, reminder
+documents, simulator use, prop-firm progression) are deliberately NOT
+mechanized: they concern the trader, not the trade stream.  What is
+mechanizable, is:
+
+* **Category toggles** (``trade_consolidation`` / ``trade_direction``) —
+  he traded consolidation-only for a period after the data showed he
+  executed direction poorly; "you don't need to adapt and trade
+  everything."
+* **Volatility band** (``vol_ref_window`` + ``vol_band_low/high``) — his
+  timeframe-switching trick "artificially changes volatility ... until I
+  get the exact size of candles that I want"; on a fixed timeframe the
+  honest equivalent is refusing bars whose candle size leaves a band
+  around its long-run typical value.
+* **Day-extreme veto** (``avoid_day_extreme_atr``) — "I don't take
+  trades when price action is at the low or high of day", and the
+  journey's repeated warning against high/low-of-day break-chasing (the
+  "scratch-ticket" drift that hit max loss 5 of 7 days).
+* **Session discipline** (``max_daily_loss_r``, ``max_trades_per_day``)
+  — his max daily loss (−30 points in the drift episode) and the
+  strategy-completeness checklist items "how many trades are permitted /
+  when trading should stop", enforced externally ("configure the
+  platform to lock further trading"), which an engine rule reproduces.
+* **Limit-order execution** (``entry_order = "limit"``) — his final
+  refinement: "carefully placed limit orders rather than market orders
+  ... changes execution but not the core edge."
+* **Conditional breakeven** (``breakeven_r``) — tested by him with the
+  conclusion it must be condition-tested, never universal; his final
+  system moves nothing, so the default is off.
+* **Outlier context** (``outlier_block_mode``) — the journey's
+  correction that following a large candle "depends on the surrounding
+  price action": momentum continuation is legitimate in strong
+  direction, so ``"direction_exempt"`` implements the contextual
+  reading; the default stays his stated flat rule.
+
 Every per-bar feature is a trailing-window statistic of bars ``<= i``,
 so the strategy inherits the harness's prefix-consistency guarantee.
 """
@@ -109,6 +145,43 @@ class CATConfig:
                                        # small-bracket middle play)
     outlier_mult: float = 2.5      # candle range > this × avg = outlier
     outlier_skip_bars: int = 2     # entry blackout after an outlier candle
+    outlier_block_mode: str = "always"  # "always" = his stated rule (a huge
+                                        # candle is a 50/50 on the next
+                                        # category); "direction_exempt" = the
+                                        # later contextual refinement (momentum
+                                        # continuation is legitimate in strong
+                                        # direction); "off"
+
+    # -- category toggles --------------------------------------------------------
+    # "you don't need to adapt and trade everything"; the author himself
+    # traded consolidation-only for a period after finding he executed
+    # direction poorly ("ignore Direction ... I wait for consolidation or
+    # do nothing").  Both on = the complete system.
+    trade_consolidation: bool = True
+    trade_direction: bool = True
+
+    # -- volatility band (the timeframe-switching trick, mechanized) -------------
+    # He targets a preferred candle-size band by changing chart timeframe
+    # ("artificially changing volatility ... until I get the exact size of
+    # candles that I want").  A backtest has a fixed timeframe, so the
+    # equivalent is refusing bars whose candle size sits outside a band
+    # around its own long-run typical value.  0 window = off (default).
+    vol_ref_window: int = 0        # rolling-median window for typical candle size
+    vol_band_low: float = 0.0      # skip when avg_tr/typical < this (0 = no floor)
+    vol_band_high: float = 0.0     # skip when avg_tr/typical > this (0 = no cap)
+
+    # -- day-extreme veto ---------------------------------------------------------
+    # "I don't take trades when price action is at the low or high of day"
+    # (his personal, data-derived rule).  Skip entries within this many
+    # average-candle units of the running ET-day high/low.  0 = off.
+    avoid_day_extreme_atr: float = 0.0
+
+    # -- execution ----------------------------------------------------------------
+    # His final refinement: "carefully placed limit orders rather than
+    # market orders — changes execution but not the core edge".
+    entry_order: str = "market"    # "market" | "limit"
+    limit_offset_frac: float = 0.0 # limit improvement vs close, in avg-TR units
+    limit_expiry_bars: int = 3     # bars a resting limit stays working
 
     # -- risk / exits ------------------------------------------------------------
     risk_pct: float = 1.0          # equity % risked per trade
@@ -116,6 +189,15 @@ class CATConfig:
     exit_on_flip: bool = False     # flat when the category flips against the
                                    # open trade (off: he lets the bracket
                                    # decide — "no trade will work every time")
+    breakeven_r: float = 0.0       # move stop to entry at +N R.  He tested
+                                   # auto-breakeven and concluded it must be
+                                   # condition-tested, not universal; his final
+                                   # system is rigid no-stop-moving → 0 = off
+    # session discipline: "determine the best max daily loss" / "how many
+    # trades are permitted, when trading should stop" — values are personal
+    # and data-derived, so both default off
+    max_daily_loss_r: float = 0.0  # stop for the ET day after losing this many R
+    max_trades_per_day: int = 0    # entry cap per ET day (0 = unlimited)
 
     # -- time filter --------------------------------------------------------------
     session_et: str = ""           # "HH:MM-HH:MM" America/New_York window;
@@ -183,6 +265,11 @@ class CATStrategy:
         self.cfg = cfg = config or CATConfig()
         if cfg.consolidation_mode not in ("follow", "fade"):
             raise ValueError("consolidation_mode must be 'follow' or 'fade'")
+        if cfg.entry_order not in ("market", "limit"):
+            raise ValueError("entry_order must be 'market' or 'limit'")
+        if cfg.outlier_block_mode not in ("always", "direction_exempt", "off"):
+            raise ValueError("outlier_block_mode must be 'always', "
+                             "'direction_exempt', or 'off'")
         self.candles = candles
         n = len(candles)
         w = cfg.regime_window
@@ -239,6 +326,28 @@ class CATStrategy:
         self.eligible_mask = (_session_mask(candles.ts, cfg.session_et)
                               if cfg.session_et else np.ones(n, dtype=bool))
 
+        # ET calendar day per bar + running day high/low ("high/low of day"),
+        # both causal: values at i use bars of the same day up to i only
+        t = pd.to_datetime(candles.ts, unit="s", utc=True).tz_convert("America/New_York")
+        self.day_key = (t.year * 10_000 + t.month * 100 + t.day).to_numpy()
+        day_series = pd.Series(self.day_key)
+        self.day_high = pd.Series(candles.high).groupby(day_series).cummax().to_numpy()
+        self.day_low = pd.Series(candles.low).groupby(day_series).cummin().to_numpy()
+
+        # long-run typical candle size, for the volatility-band filter
+        if cfg.vol_ref_window > 0:
+            self.vol_ref = (pd.Series(self.avg_tr)
+                            .rolling(cfg.vol_ref_window, min_periods=cfg.vol_ref_window)
+                            .median().to_numpy())
+        else:
+            self.vol_ref = None
+
+        # per-ET-day discipline state
+        self._day: int | None = None
+        self._day_r = 0.0
+        self._day_entries = 0
+        self._trade_ptr = 0
+
         self._warmup = max(w, cfg.candle_size_window) + 1
         self.skip_counts = {
             "not_eligible_time": 0, "no_category": 0, "unstable": 0,
@@ -246,13 +355,17 @@ class CATStrategy:
             "extreme_entry_veto": 0, "target_not_inside": 0,
             "target_not_new_area": 0, "stop_not_outside": 0,
             "degenerate_range": 0, "rejected_geometry": 0,
+            "category_disabled": 0, "vol_out_of_band": 0,
+            "at_day_extreme": 0, "daily_loss_stop": 0, "max_trades_stop": 0,
         }
 
     # -- trading loop -----------------------------------------------------------
 
     def on_bar(self, i: int, broker: Broker) -> None:
         cfg = self.cfg
+        self._update_day_state(i, broker)
         if broker.position is not None:
+            self._manage_breakeven(i, broker)
             if cfg.exit_on_flip and self._flipped_against(i, broker):
                 broker.close_position()
             return
@@ -261,22 +374,47 @@ class CATStrategy:
         if not self.eligible_mask[i]:
             self.skip_counts["not_eligible_time"] += 1
             return
+        if cfg.max_daily_loss_r > 0 and self._day_r <= -cfg.max_daily_loss_r:
+            self.skip_counts["daily_loss_stop"] += 1
+            return
+        if cfg.max_trades_per_day > 0 and self._day_entries >= cfg.max_trades_per_day:
+            self.skip_counts["max_trades_stop"] += 1
+            return
         cat = self.category[i]
         if cat == CAT_NONE:
             self.skip_counts["no_category"] += 1
             return
+        if (cat == CAT_CONSOLIDATION and not cfg.trade_consolidation) or \
+                (cat == CAT_DIRECTION and not cfg.trade_direction):
+            self.skip_counts["category_disabled"] += 1
+            return
         if not self.stable[i]:
             self.skip_counts["unstable"] += 1
             return
-        if self.blocked[i]:
+        if self.blocked[i] and cfg.outlier_block_mode != "off" and not (
+                cfg.outlier_block_mode == "direction_exempt" and cat == CAT_DIRECTION):
             self.skip_counts["outlier_blackout"] += 1
             return
         avg = self.avg_tr[i]
         if not np.isfinite(avg) or avg <= 0:
             self.skip_counts["rejected_geometry"] += 1
             return
+        if self.vol_ref is not None:
+            ref = self.vol_ref[i]
+            ratio = avg / ref if np.isfinite(ref) and ref > 0 else np.nan
+            if not np.isfinite(ratio) \
+                    or (cfg.vol_band_low > 0 and ratio < cfg.vol_band_low) \
+                    or (cfg.vol_band_high > 0 and ratio > cfg.vol_band_high):
+                self.skip_counts["vol_out_of_band"] += 1
+                return
 
         price = float(self.candles.close[i])
+        if cfg.avoid_day_extreme_atr > 0 and (
+                self.day_high[i] - price < cfg.avoid_day_extreme_atr * avg
+                or price - self.day_low[i] < cfg.avoid_day_extreme_atr * avg):
+            self.skip_counts["at_day_extreme"] += 1
+            return
+
         tp_dist = cfg.bracket_frac * avg
         sl_dist = tp_dist / cfg.rr
         hi, lo = float(self.range_high[i]), float(self.range_low[i])
@@ -287,14 +425,53 @@ class CATStrategy:
             order = self._direction_entry(i, price, tp_dist, sl_dist, hi, lo)
         if order is None:
             return
+        if cfg.entry_order == "limit":
+            entry = price - order.side * cfg.limit_offset_frac * avg
+            shift = entry - price   # keep bracket distances anchored to the fill
+            order.type = "limit"
+            order.price = entry
+            order.sl += shift
+            order.tp += shift
+            order.expiry_index = i + max(1, cfg.limit_expiry_bars)
+        else:
+            order.expiry_index = i + 1   # market entry at the next bar only
         qty = broker.equity * cfg.risk_pct / 100.0 / sl_dist
         qty = min(qty, broker.equity * cfg.max_leverage / price)
         if qty <= 0:
             self.skip_counts["rejected_geometry"] += 1
             return
         order.qty = qty
-        order.expiry_index = i + 1   # market entry at the next bar only
         broker.submit(order)
+        self._day_entries += 1
+
+    def _update_day_state(self, i: int, broker: Broker) -> None:
+        """Roll the ET-day counters and fold in newly closed trades' R."""
+        day = int(self.day_key[i])
+        if day != self._day:
+            self._day, self._day_r, self._day_entries = day, 0.0, 0
+        while self._trade_ptr < len(broker.trades):
+            t = broker.trades[self._trade_ptr]
+            self._trade_ptr += 1
+            if int(self.day_key[t.exit_index]) == self._day:
+                r = t.r_multiple
+                if not np.isnan(r):
+                    self._day_r += r
+
+    def _manage_breakeven(self, i: int, broker: Broker) -> None:
+        """Move the stop to entry once the trade has run ``breakeven_r`` R."""
+        cfg = self.cfg
+        p = broker.position
+        if cfg.breakeven_r <= 0 or p is None or p.initial_sl <= 0:
+            return
+        risk = abs(p.entry_price - p.initial_sl)
+        if risk <= 0:
+            return
+        unrealized = p.side * (float(self.candles.close[i]) - p.entry_price)
+        if unrealized >= cfg.breakeven_r * risk:
+            if p.side == BULL and p.sl < p.entry_price:
+                p.sl = p.entry_price
+            elif p.side == BEAR and (p.sl > p.entry_price or p.sl == 0):
+                p.sl = p.entry_price
 
     def _consolidation_entry(self, i: int, price: float, tp_dist: float,
                              sl_dist: float, hi: float, lo: float) -> Order | None:

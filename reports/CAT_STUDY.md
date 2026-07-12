@@ -45,7 +45,30 @@ Every rule is traced to an explicit statement in the source material;
 
 Decisions are made on closed bars only; every per-bar feature is a
 trailing-window statistic, so the strategy passes the harness's
-prefix-consistency (no-lookahead) test (`tests/test_cat.py`, 16 tests).
+prefix-consistency (no-lookahead) test (`tests/test_cat.py`).
+
+### 2b. Second source: the trading-journey retrospective (audited 2026-07-12)
+
+The author's journey guide is mostly process and psychology — journaling,
+reminder documents, simulator discipline, prop-firm progression, stop-moving
+under pressure. Those concern the *trader*, not the trade stream, and are
+deliberately not mechanized: a backtest that "journals" would be theater.
+The mechanizable strategy content it adds is implemented as config, every
+default chosen so the frozen behavior is unchanged (regression-verified
+byte-identical on the calibration seeds):
+
+| Journey-guide claim | Mechanization (default) |
+|---|---|
+| traded consolidation-only when data showed he executed direction poorly; "you don't need to trade everything" | `trade_consolidation` / `trade_direction` toggles (both on = complete system) |
+| timeframe-switching to force a preferred candle size ("artificially changing volatility until I get the exact size of candles I want") | `vol_ref_window` + `vol_band_low/high`: refuse bars whose avg candle size leaves a band around its long-run median (off) |
+| "no trades at the high or low of day"; HOD/LOD break-chasing = the scratch-ticket drift that hit max loss 5 of 7 days | `avoid_day_extreme_atr`: veto entries within N avg-candles of the running ET-day extreme (off) |
+| max daily loss (−30 pts in the drift episode) + "how many trades are permitted / when trading should stop", enforced externally | `max_daily_loss_r`, `max_trades_per_day` per ET day (off) |
+| final refinement: "carefully placed limit orders rather than market orders — changes execution but not the core edge" | `entry_order = "limit"` + `limit_offset_frac`/`limit_expiry_bars` (market) |
+| auto-breakeven tested; conclusion: condition-dependent, never universal; final system moves nothing | `breakeven_r` (0 = off, matching his final rigid rule) |
+| large-candle correction: momentum continuation is legitimate in strong direction, suspect in consolidation | `outlier_block_mode = "direction_exempt"` option (default `"always"`, his stated flat rule) |
+| middle-of-range entries with targets outside = worst geometry; enter near an edge, stop beyond it, target back through the range | already covered: `consolidation_mode = "fade"` + `require_stop_outside = true` reproduce it exactly |
+| RR must reflect win rate — high-win-rate scalps may risk more than they target (2 pts for 3.5; 8 for 10; 5-pt stop / 7-pt target in high vol) | already covered: `rr` is free (< 1 or > 1); bracket size already scales with volatility |
+| stop sits at the idea's invalidation, never moved from discomfort; trades reduce to "one line hit before the other" | already the engine model: fixed bracket, first-touch resolution, pessimistic ties |
 
 ## 3. Why the calibration is synthetic (and why ES is not here yet)
 
@@ -190,6 +213,11 @@ Decision rule, declared now:
   **negative or inconclusive**, and the config is not retuned on ES
   afterward. A second run on new parameters would be a new,
   separately preregistered study.
+- **Amendment 2026-07-12** (before any ES contact): the journey-guide
+  audit (§2b) added config surface only; `configs/cat_es.toml` pins
+  every new knob at its neutral value and the calibration seeds
+  reproduce byte-identically, so the frozen spec is unchanged in
+  substance.
 - The per-leg decomposition (`cat_cons` vs `cat_dir`) is reported
   descriptively either way, since §4 predicts the legs can differ.
 - ES 2010–2026 is already burned for tuning purposes by studies M/V3

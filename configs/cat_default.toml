@@ -26,10 +26,39 @@ require_stop_outside = false # true = textbook box drawing; false = his live pla
 outlier_mult = 2.5
 outlier_skip_bars = 2
 
+# category toggles ("you don't need to adapt and trade everything";
+# the author himself ran consolidation-only for a period)
+trade_consolidation = true
+trade_direction = true
+
+# outlier context: "always" = his flat rule; "direction_exempt" = the
+# journey guide's contextual refinement; "off"
+outlier_block_mode = "always"
+
+# volatility band — the timeframe-switching trick mechanized for a fixed
+# timeframe (0 window = off)
+vol_ref_window = 0
+vol_band_low = 0.0
+vol_band_high = 0.0
+
+# day-extreme veto: skip entries within N avg-candles of the running ET-day
+# high/low ("I don't take trades at the high or low of day"; 0 = off)
+avoid_day_extreme_atr = 0.0
+
+# execution ("carefully placed limit orders rather than market orders")
+entry_order = "market"
+limit_offset_frac = 0.0
+limit_expiry_bars = 3
+
 # risk
 risk_pct = 1.0
 max_leverage = 5.0
 exit_on_flip = false
+breakeven_r = 0.0          # his final system moves nothing; 0 = off
+
+# session discipline (values are personal/data-derived; 0 = off)
+max_daily_loss_r = 0.0
+max_trades_per_day = 0
 
 # session (personal preference; his own is "09:33-09:50" ET)
 session_et = ""
