@@ -162,6 +162,23 @@ def test_no_entries_in_chaos_or_blackout():
         assert not strat.blocked[i]
 
 
+def test_fade_mode_shorts_top_longs_bottom():
+    candles, _ = synthetic_cat_regimes(n=8000, seed=5)
+    strat = _recorded(candles, CATConfig(consolidation_mode="fade"))
+    cons = [(i, o) for i, o in strat.submissions if o.tag == "cat_cons"]
+    assert cons, "no fade trades on regime data — vacuous test"
+    for i, o in cons:
+        hi, lo = strat.range_high[i], strat.range_low[i]
+        pos = (candles.close[i] - lo) / (hi - lo)
+        if o.side == BEAR:
+            assert pos >= 1.0 - strat.cfg.avoid_extremes_frac   # short the top
+        else:
+            assert pos <= strat.cfg.avoid_extremes_frac         # long the bottom
+        assert lo <= o.tp <= hi
+    with pytest.raises(ValueError):
+        CATStrategy(candles, CATConfig(consolidation_mode="bogus"))
+
+
 def test_session_filter():
     candles = synthetic_candles(n=3000, seed=2)
     cfg = CATConfig(session_et="09:33-09:50", er_direction=0.30, er_consolidation=0.25)

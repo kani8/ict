@@ -92,9 +92,16 @@ class CATConfig:
     rr: float = 1.0                # target distance / stop distance (1:1 start)
 
     # -- entry filters ----------------------------------------------------------
+    consolidation_mode: str = "follow" # "follow" = his live play (with the
+                                       # candle, toward already-traded prices);
+                                       # "fade" = the stated equally-valid
+                                       # alternative (short the top band, long
+                                       # the bottom band of the range)
     avoid_extremes_frac: float = 0.25  # no longs in the top / shorts in the
                                        # bottom `frac` of the range (the stated
-                                       # extreme high-probability loss)
+                                       # extreme high-probability loss); in
+                                       # fade mode, the same band is where
+                                       # fades are taken (in reverse)
     require_new_area: bool = True      # direction target must reach beyond the
                                        # trailing range ("go to a new area")
     require_stop_outside: bool = False # consolidation stop beyond the range
@@ -174,6 +181,8 @@ class CATStrategy:
 
     def __init__(self, candles: Candles, config: CATConfig | None = None) -> None:
         self.cfg = cfg = config or CATConfig()
+        if cfg.consolidation_mode not in ("follow", "fade"):
+            raise ValueError("consolidation_mode must be 'follow' or 'fade'")
         self.candles = candles
         n = len(candles)
         w = cfg.regime_window
@@ -295,20 +304,31 @@ class CATStrategy:
         if rng <= 0:
             self.skip_counts["degenerate_range"] += 1
             return None
-        body = self.candles.close[i] - self.candles.open[i]
-        if body == 0:
-            self.skip_counts["no_candle_to_follow"] += 1
-            return None
-        side = BULL if body > 0 else BEAR
         pos = (price - lo) / rng
-        # never long near the top / short near the bottom — the stated
-        # extreme high-probability loss
-        if side == BULL and pos > 1.0 - cfg.avoid_extremes_frac:
-            self.skip_counts["extreme_entry_veto"] += 1
-            return None
-        if side == BEAR and pos < cfg.avoid_extremes_frac:
-            self.skip_counts["extreme_entry_veto"] += 1
-            return None
+        if cfg.consolidation_mode == "fade":
+            # "shorting at the top and going long at the bottom" — the
+            # reverse of the stated extreme high-probability loss
+            if pos >= 1.0 - cfg.avoid_extremes_frac:
+                side = BEAR
+            elif pos <= cfg.avoid_extremes_frac:
+                side = BULL
+            else:
+                self.skip_counts["extreme_entry_veto"] += 1
+                return None
+        else:
+            body = self.candles.close[i] - self.candles.open[i]
+            if body == 0:
+                self.skip_counts["no_candle_to_follow"] += 1
+                return None
+            side = BULL if body > 0 else BEAR
+            # never long near the top / short near the bottom — the stated
+            # extreme high-probability loss
+            if side == BULL and pos > 1.0 - cfg.avoid_extremes_frac:
+                self.skip_counts["extreme_entry_veto"] += 1
+                return None
+            if side == BEAR and pos < cfg.avoid_extremes_frac:
+                self.skip_counts["extreme_entry_veto"] += 1
+                return None
         tp = price + side * tp_dist
         if not (lo <= tp <= hi):   # target must be where price has been
             self.skip_counts["target_not_inside"] += 1

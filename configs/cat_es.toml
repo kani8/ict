@@ -27,6 +27,7 @@ candle_size_window = 10
 bracket_frac = 0.5
 rr = 1.0
 
+consolidation_mode = "follow"
 avoid_extremes_frac = 0.25
 require_new_area = true
 require_stop_outside = false

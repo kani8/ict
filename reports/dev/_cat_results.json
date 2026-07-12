@@ -1,0 +1,411 @@
+{
+  "config": "CATConfig() defaults == configs/cat_default.toml",
+  "n_bars": 35040,
+  "n_sims": 300,
+  "regime": {
+    "1": {
+      "n_trades": 6171,
+      "total_return_pct": 3617.664864913181,
+      "win_rate": 0.49424728569113596,
+      "profit_factor": 1.2496951155050495,
+      "mean_r": 0.12569021813835177,
+      "r_ci": [
+        0.08212823411232967,
+        0.17000839895213846
+      ],
+      "block_len": 18,
+      "p_return": 0.0033222591362126247,
+      "p_mean_r": 0.0033222591362126247,
+      "null_note": "",
+      "exposure_pct": 14.249429223744292,
+      "avg_holding_bars": 0.8091071139199482,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3941,
+          "mean_r": -0.10980723501718528,
+          "win_rate": 0.4072570413600609
+        },
+        "cat_dir": {
+          "n": 2230,
+          "mean_r": 0.5418765243652448,
+          "win_rate": 0.647982062780269
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10864,
+        "unstable": 7047,
+        "outlier_blackout": 1230,
+        "no_candle_to_follow": 1785,
+        "extreme_entry_veto": 1990,
+        "target_not_inside": 0,
+        "target_not_new_area": 935,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    },
+    "2": {
+      "n_trades": 6189,
+      "total_return_pct": 12432.668466079289,
+      "win_rate": 0.5109064469219583,
+      "profit_factor": 1.4489232325319141,
+      "mean_r": 0.17036419123260207,
+      "r_ci": [
+        0.12822446649977398,
+        0.21184938303221046
+      ],
+      "block_len": 18,
+      "p_return": 0.0033222591362126247,
+      "p_mean_r": 0.0033222591362126247,
+      "null_note": "",
+      "exposure_pct": 14.460616438356164,
+      "avg_holding_bars": 0.8187106156083374,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3759,
+          "mean_r": -0.041749511401361045,
+          "win_rate": 0.42857142857142855
+        },
+        "cat_dir": {
+          "n": 2430,
+          "mean_r": 0.4984857583935352,
+          "win_rate": 0.6382716049382716
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10873,
+        "unstable": 6924,
+        "outlier_blackout": 1189,
+        "no_candle_to_follow": 1925,
+        "extreme_entry_veto": 1882,
+        "target_not_inside": 0,
+        "target_not_new_area": 965,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    },
+    "3": {
+      "n_trades": 6309,
+      "total_return_pct": 15583.379628434079,
+      "win_rate": 0.5168806466951973,
+      "profit_factor": 1.3827097507700168,
+      "mean_r": 0.18071255355841168,
+      "r_ci": [
+        0.13518815378503357,
+        0.22659187688066132
+      ],
+      "block_len": 18,
+      "p_return": 0.0033222591362126247,
+      "p_mean_r": 0.0033222591362126247,
+      "null_note": "",
+      "exposure_pct": 14.814497716894978,
+      "avg_holding_bars": 0.8227928356316373,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3814,
+          "mean_r": -0.046854366494851474,
+          "win_rate": 0.43104352385946515
+        },
+        "cat_dir": {
+          "n": 2495,
+          "mean_r": 0.5285843904654842,
+          "win_rate": 0.6480961923847696
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10538,
+        "unstable": 6868,
+        "outlier_blackout": 1262,
+        "no_candle_to_follow": 1878,
+        "extreme_entry_veto": 1972,
+        "target_not_inside": 0,
+        "target_not_new_area": 996,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    }
+  },
+  "null": {
+    "1": {
+      "n_trades": 4337,
+      "total_return_pct": -69.71374763967555,
+      "win_rate": 0.4180308969333641,
+      "profit_factor": 0.9107686904737352,
+      "mean_r": -0.05379776755299432,
+      "r_ci": [
+        -0.09250282635135594,
+        -0.016204631188706412
+      ],
+      "block_len": 16,
+      "p_return": 0.42524916943521596,
+      "p_mean_r": 0.6046511627906976,
+      "null_note": "",
+      "exposure_pct": 9.266552511415526,
+      "avg_holding_bars": 0.7486741987548997,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3855,
+          "mean_r": -0.05067025199445776,
+          "win_rate": 0.4184176394293126
+        },
+        "cat_dir": {
+          "n": 482,
+          "mean_r": -0.07881140339979614,
+          "win_rate": 0.4149377593360996
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 15089,
+        "unstable": 8481,
+        "outlier_blackout": 753,
+        "no_candle_to_follow": 707,
+        "extreme_entry_veto": 2066,
+        "target_not_inside": 0,
+        "target_not_new_area": 335,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    },
+    "2": {
+      "n_trades": 4302,
+      "total_return_pct": -85.97228577706638,
+      "win_rate": 0.4116689911668991,
+      "profit_factor": 0.8411968747302547,
+      "mean_r": -0.07953222694605575,
+      "r_ci": [
+        -0.11718639919199139,
+        -0.04134741399521427
+      ],
+      "block_len": 16,
+      "p_return": 0.9036544850498339,
+      "p_mean_r": 0.9003322259136213,
+      "null_note": "",
+      "exposure_pct": 9.35502283105023,
+      "avg_holding_bars": 0.7619711761971176,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3857,
+          "mean_r": -0.07945599444900374,
+          "win_rate": 0.4124967591392274
+        },
+        "cat_dir": {
+          "n": 445,
+          "mean_r": -0.0801929656901671,
+          "win_rate": 0.4044943820224719
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 15317,
+        "unstable": 8380,
+        "outlier_blackout": 673,
+        "no_candle_to_follow": 666,
+        "extreme_entry_veto": 2067,
+        "target_not_inside": 0,
+        "target_not_new_area": 332,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    },
+    "3": {
+      "n_trades": 4271,
+      "total_return_pct": -61.272671704974954,
+      "win_rate": 0.425661437602435,
+      "profit_factor": 0.9337072956065312,
+      "mean_r": -0.03889474637827608,
+      "r_ci": [
+        -0.07893756492380956,
+        0.0019578830601317937
+      ],
+      "block_len": 16,
+      "p_return": 0.31561461794019935,
+      "p_mean_r": 0.4019933554817276,
+      "null_note": "",
+      "exposure_pct": 9.549086757990867,
+      "avg_holding_bars": 0.783423085928354,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3760,
+          "mean_r": -0.04342025110487054,
+          "win_rate": 0.423936170212766
+        },
+        "cat_dir": {
+          "n": 511,
+          "mean_r": -0.00559553351722875,
+          "win_rate": 0.4383561643835616
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 15237,
+        "unstable": 8344,
+        "outlier_blackout": 831,
+        "no_candle_to_follow": 690,
+        "extreme_entry_veto": 1948,
+        "target_not_inside": 0,
+        "target_not_new_area": 348,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    }
+  },
+  "diagnostics": {
+    "1": {
+      "coverage": 0.6802318939913182,
+      "accuracy_when_covered": 0.8915571602502204,
+      "share_direction": 0.38561652462319995,
+      "base_rate_direction": 0.33441855151930544
+    },
+    "2": {
+      "coverage": 0.6807173863376742,
+      "accuracy_when_covered": 0.8962493706997818,
+      "share_direction": 0.40174525927168986,
+      "base_rate_direction": 0.3470413525245602
+    },
+    "3": {
+      "coverage": 0.6898275074251771,
+      "accuracy_when_covered": 0.8997309045746222,
+      "share_direction": 0.4041813289174084,
+      "base_rate_direction": 0.3444996572995202
+    }
+  },
+  "cost_sensitivity": {
+    "zero": {
+      "n_trades": 6171,
+      "total_return_pct": 151733.37896574082,
+      "win_rate": 0.49424728569113596,
+      "profit_factor": 1.6108414785787435,
+      "mean_r": 0.29080350931726573,
+      "r_ci": [
+        0.24504390543512436,
+        0.3374739861524469
+      ],
+      "block_len": 18,
+      "p_return": 1.0,
+      "p_mean_r": 1.0,
+      "null_note": "",
+      "exposure_pct": 14.249429223744292,
+      "avg_holding_bars": 0.8091071139199482,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3941,
+          "mean_r": 0.04664024348634706,
+          "win_rate": 0.4072570413600609
+        },
+        "cat_dir": {
+          "n": 2230,
+          "mean_r": 0.7223045992902032,
+          "win_rate": 0.647982062780269
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10864,
+        "unstable": 7047,
+        "outlier_blackout": 1230,
+        "no_candle_to_follow": 1785,
+        "extreme_entry_veto": 1990,
+        "target_not_inside": 0,
+        "target_not_new_area": 935,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    },
+    "crypto_1_2_1": {
+      "n_trades": 6171,
+      "total_return_pct": -99.99971424265061,
+      "win_rate": 0.4832280019445795,
+      "profit_factor": 0.4684417195129618,
+      "mean_r": -0.45903115973801095,
+      "r_ci": [
+        -0.500652824015993,
+        -0.4165735441601224
+      ],
+      "block_len": 18,
+      "p_return": 1.0,
+      "p_mean_r": 1.0,
+      "null_note": "",
+      "exposure_pct": 14.249429223744292,
+      "avg_holding_bars": 0.8091071139199482,
+      "by_tag": {
+        "cat_cons": {
+          "n": 3941,
+          "mean_r": -0.692430596170318,
+          "win_rate": 0.3922862217711241
+        },
+        "cat_dir": {
+          "n": 2230,
+          "mean_r": -0.046552604141722784,
+          "win_rate": 0.6439461883408072
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10864,
+        "unstable": 7047,
+        "outlier_blackout": 1230,
+        "no_candle_to_follow": 1785,
+        "extreme_entry_veto": 1990,
+        "target_not_inside": 0,
+        "target_not_new_area": 935,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    }
+  },
+  "intrabar": {
+    "optimistic": {
+      "n_trades": 7488,
+      "total_return_pct": 2968.2801807712403,
+      "win_rate": 0.6263354700854701,
+      "profit_factor": 1.2514791188169732,
+      "mean_r": 0.09747129665305147,
+      "r_ci": [
+        0.07065885776553864,
+        0.1255704902071573
+      ],
+      "block_len": 20,
+      "p_return": 1.0,
+      "p_mean_r": 1.0,
+      "null_note": "",
+      "exposure_pct": 9.469178082191782,
+      "avg_holding_bars": 0.44310897435897434,
+      "by_tag": {
+        "cat_cons": {
+          "n": 4520,
+          "mean_r": -0.06816766124766231,
+          "win_rate": 0.5422566371681415
+        },
+        "cat_dir": {
+          "n": 2968,
+          "mean_r": 0.3497246961514431,
+          "win_rate": 0.7543800539083558
+        }
+      },
+      "skip_counts": {
+        "not_eligible_time": 0,
+        "no_category": 10990,
+        "unstable": 7048,
+        "outlier_blackout": 1279,
+        "no_candle_to_follow": 1653,
+        "extreme_entry_veto": 2261,
+        "target_not_inside": 0,
+        "target_not_new_area": 978,
+        "stop_not_outside": 0,
+        "degenerate_range": 0,
+        "rejected_geometry": 0
+      }
+    }
+  }
+}

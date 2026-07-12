@@ -95,6 +95,13 @@ def main() -> None:
         out["null"][seed] = run_one(nullc, cfg, ES_COST)
         print(f"seed {seed} done", flush=True)
 
+    out["fade_mode"] = {}
+    fade = CATConfig(consolidation_mode="fade")
+    for seed in SEEDS:
+        candles, _ = synthetic_cat_regimes(n=N_BARS, seed=seed)
+        out["fade_mode"][seed] = run_one(candles, fade, ES_COST, n_sims=0)
+        print(f"fade seed {seed} done", flush=True)
+
     candles, _ = synthetic_cat_regimes(n=N_BARS, seed=SEEDS[0])
     out["cost_sensitivity"]["zero"] = run_one(candles, cfg, ZERO_COST, n_sims=0)
     out["cost_sensitivity"]["crypto_1_2_1"] = run_one(

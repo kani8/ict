@@ -19,6 +19,7 @@ bracket_frac = 0.5          # target ~ half the recent average candle range
 rr = 1.0                    # 1:1 risk-reward, his recommended starting point
 
 # entry filters
+consolidation_mode = "follow" # "fade" = short the top band / long the bottom band
 avoid_extremes_frac = 0.25  # no longs in the top / shorts in the bottom quarter
 require_new_area = true     # direction targets must reach beyond the range
 require_stop_outside = false # true = textbook box drawing; false = his live play
