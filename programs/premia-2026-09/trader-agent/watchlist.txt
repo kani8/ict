@@ -1,0 +1,7 @@
+# Watchlist for Trail B (trader-agent). One yfinance symbol + short label per line.
+# Edit freely; keep it to <= 8 names so the morning read stays within budget.
+ES=F  S&P 500 E-mini
+NQ=F  Nasdaq-100 E-mini
+SMH  Semiconductors ETF
+NVDA  Nvidia
+IONQ  IonQ (quantum theme)

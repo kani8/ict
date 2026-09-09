@@ -1,0 +1,6 @@
+date,instrument,call,horizon,conviction,hype,entry,invalidation,target,size,thesis,sources,playbook_version
+2026-09-08,ES=F,watch,5d,2,3,7698.00,7823.00,,0,Bearish lean: hawkish regime + breadth at 20d lows + hot data failed to rally. CPI Thu binary risk prevents entry. Wait for data confirmation.,yfinance;schwab.com/learn/story/stock-market-update-open,1.0
+2026-09-08,NQ=F,flat,5d,0,3,29606.75,,,0,No differentiated view. Mid-range tech slight outperformance. Pre-CPI flat.,yfinance,1.0
+2026-09-08,SMH,flat,5d,0,3,575.93,,,0,Relative strength +3.47% 5d but NVDA reversal is yellow flag. No variant.,yfinance,1.0
+2026-09-08,NVDA,watch,5d,2,4,225.97,230.50,,0,Bearish lean: failed breakout above 20d high (233->226) while SMH rose. Distribution candle. Need follow-through below 225 to enter. Crowd consensus must-own but 40-50x fwd at 4.79% 10Y.,yfinance;schwab.com/learn/story/stock-market-update-open,1.0
+2026-09-08,IONQ,flat,5d,0,3,40.19,,,0,No variant no catalyst. Speculative beta 28% of 20d range. Down 53.7% from highs.,yfinance;fool.com/investing/2026/09/04/3-top-quantum-computing-stocks-to-buy-in-september/,1.0

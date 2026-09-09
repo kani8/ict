@@ -1,0 +1,1 @@
+# Optional: one URL per line of credible public commentary to check each morning (blogs, Substack public posts, Fed pages). Leave empty to rely on WebSearch.
