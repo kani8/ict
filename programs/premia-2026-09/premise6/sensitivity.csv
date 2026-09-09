@@ -1,0 +1,7 @@
+L,weighting,stitched_sharpe,is_rule
+6,class_balanced,0.1293873641160423,False
+6,1/N,0.07283026945874342,False
+12,class_balanced,0.1117365889903721,True
+12,1/N,0.23807321995883446,False
+COMBO,class_balanced,0.16837029048137345,False
+COMBO,1/N,0.25446860566684903,False

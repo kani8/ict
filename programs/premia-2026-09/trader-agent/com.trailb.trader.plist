@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Trail B ("The Speculator's Morning") daily launchd agent.
+  NOT INSTALLED — this file is written only. To install:
+    cp trader-agent/com.trailb.trader.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.trailb.trader.plist
+  To uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.trailb.trader.plist
+    rm ~/Library/LaunchAgents/com.trailb.trader.plist
+
+  launchd's StartCalendarInterval Hour/Minute are LOCAL wall-clock time on
+  this Mac, not America/New_York time. Target: 07:30 America/New_York.
+  This machine's zone, per `date +%Z`, was CDT (US Central) at the time
+  this file was generated. US Central is 1 hour behind US Eastern
+  year-round (both CDT/EDT and CST/EST shift on the same DST schedule),
+  so 07:30 ET = 06:30 local on this machine -> Hour=6, Minute=30 below.
+
+  If this plist is installed on a machine in a different timezone (or if
+  this Mac's timezone changes), recompute: Hour = 7 - (ET_offset_hours -
+  local_offset_hours), and adjust the Hour value(s) below accordingly.
+  Example: on a machine already set to America/New_York, use Hour=7.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.trailb.trader</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/kvatsa/Downloads/GLBX-20260702-TBF7DT8KTH/trader-agent/run_daily.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Weekday</key><integer>1</integer>
+            <key>Hour</key><integer>6</integer>
+            <key>Minute</key><integer>30</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key><integer>2</integer>
+            <key>Hour</key><integer>6</integer>
+            <key>Minute</key><integer>30</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key><integer>3</integer>
+            <key>Hour</key><integer>6</integer>
+            <key>Minute</key><integer>30</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key><integer>4</integer>
+            <key>Hour</key><integer>6</integer>
+            <key>Minute</key><integer>30</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key><integer>5</integer>
+            <key>Hour</key><integer>6</integer>
+            <key>Minute</key><integer>30</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/kvatsa/Downloads/GLBX-20260702-TBF7DT8KTH/trader-agent/logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/kvatsa/Downloads/GLBX-20260702-TBF7DT8KTH/trader-agent/logs/launchd.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

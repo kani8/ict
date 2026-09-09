@@ -12,6 +12,16 @@ sources of backtest deception: lookahead bias, intrabar wishful thinking, and
 ignored costs. No finite harness rules out every artifact; this one makes the
 known ones testable.
 
+## 🛑 PROGRAM 2 CONCLUDED (2026-09-08): six premises, one answer
+
+A second, separately preregistered program asked whether any few-parameter
+systematic strategy on free data (ES futures, ETFs, CBOE VIX futures, FRED
+rates) could reach a net Sharpe ≥ 1.5 on a sealed 2024-07 → 2026-07 window.
+Six premises (intraday momentum, breakout, trend ×2, VIX-basis VRP, carry)
+all failed their pre-stated gates; on every shared calendar the
+**unconditional premium beat the timed version of itself**. The OOS window
+was never opened. Full record: [`programs/premia-2026-09/`](programs/premia-2026-09/README.md).
+
 ## 🛑 PROGRAM CONCLUDED (2026-07-03): four tests, one answer
 
 The full program — canonical ICT (V1), maximum-faithfulness (V2.1,
